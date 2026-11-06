@@ -1,0 +1,7 @@
+{
+  "name": "matchpoint-demo-film",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Editable source and rendering workflow for the MATCHPOINT hackathon demo film."
+}

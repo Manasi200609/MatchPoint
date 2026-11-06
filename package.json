@@ -1,0 +1,12 @@
+{
+  "name": "matchpoint",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["client", "server"],
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "test": "npm test -w server"
+  },
+  "devDependencies": { "concurrently": "^9.1.2" }
+}

@@ -1,0 +1,11 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { JsonCaseRepository } from './repository/JsonCaseRepository.js';
+import { InvestigationService } from './services/InvestigationService.js';
+import { makeRouter } from './routes.js';
+const app=express(); const repo=new JsonCaseRepository(); const service=new InvestigationService(repo);
+app.use(cors({origin:process.env.CLIENT_ORIGIN||'http://localhost:5173'}));app.use(express.json({limit:'1mb'}));
+app.get('/api/health',async(_req,res,next)=>{try{res.json({ok:true,storage:'local-json',switch:await service.integrationStatus()})}catch(e){next(e)}});app.use('/api',makeRouter(service,repo));
+app.use((err,_req,res,_next)=>{console.error(err);res.status(500).json({error:'Internal server error'})});
+const port=Number(process.env.PORT)||4000;repo.init().then(()=>app.listen(port,()=>console.log(`MATCHPOINT API listening at http://localhost:${port}`))).catch(e=>{console.error('Could not initialize local data store',e);process.exitCode=1});
