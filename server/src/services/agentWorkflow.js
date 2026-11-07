@@ -1,7 +1,9 @@
 import { reconcileCase } from '../reconciliation.js';
 
 export function parseAgentJson(raw, role) {
-  const text = String(raw || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  let text = String(raw ?? '').replace(/^\uFEFF/, '').trim();
+  const fenced = text.match(/^```(?:json)?[\t ]*\r?\n?([\s\S]*?)\r?\n?[\t ]*```$/i);
+  if (fenced) text = fenced[1].trim();
   let value;
   try { value = JSON.parse(text); } catch { throw new Error(`${role} response was not valid JSON.`); }
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${role} response must be a JSON object.`);
@@ -75,7 +77,7 @@ export function buildMockWorkflow(caseRecord) {
 }
 
 export function buildAgentPrompt(role, caseRecord, { calculations, recon, auditor }) {
-  const common = { caseId: caseRecord.id, syntheticDemo: Boolean(caseRecord.synthetic), invoice: caseRecord.invoice, purchaseOrder: caseRecord.purchaseOrder, goodsReceived: caseRecord.goodsReceived, evidence: caseRecord.evidence };
+  const common = { caseId: caseRecord.id, testFixture: Boolean(caseRecord.synthetic), testCaseKey: caseRecord.testCaseKey || null, scenarioContext: caseRecord.investigationContext || null, invoice: caseRecord.invoice, purchaseOrder: caseRecord.purchaseOrder, goodsReceived: caseRecord.goodsReceived, evidence: caseRecord.evidence };
   const replyRule = 'Reply as a message in this same Switch thread, with only the requested JSON object in the message body. Do not start a new room message.';
   if (role === 'RECON') return `You are RECON, the accounts-payable investigation agent. Investigate only the supplied case record. Calculate and explain every amount from source values; do not invent data. The deterministic backend calculation is provided for cross-checking; report any mismatch honestly. Return only one JSON object with numeric invoiceAmount, poAmount, goodsReceivedAmount, invoiceToPoVariance, poToReceiptVariance, unsupportedCharges and totalExposure; arrays missingEvidence and findings; preliminaryRecommendation string. Each finding needs title, detail and evidence (source IDs). The additional charge is included in invoice total; do not double count. ${replyRule} Case JSON: ${JSON.stringify(common)}. Deterministic calculation JSON: ${JSON.stringify(calculations)}`;
   if (role === 'AUDITOR') return `You are AUDITOR. Independently challenge RECON; do not accept its claims without recalculating against source data. Check no double count, cite gaps, distinguish verified and disputed items. Return only one JSON object with arrays verifiedFindings, disputedFindings, calculationChecks, evidenceGaps; strings auditConclusion and verificationStatus. ${replyRule} Case JSON: ${JSON.stringify(common)}. RECON output: ${JSON.stringify(recon)}. Independent deterministic calculation: ${JSON.stringify(calculations)}`;

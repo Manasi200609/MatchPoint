@@ -65,6 +65,12 @@ test('agent reply polling requires sender and exact task thread; ignores unrelat
   assert.equal(reply.id,'reply-1');assert.equal(reads,1);
 });
 
+test('known participant identity prevents another agent from replying under the same display name',async()=>{
+  const {adapter}=fixture(url=>url.endsWith('/ops')?ops:url.endsWith('/connect_to_room')?{result:{name:'MATCHPOINT'}}:url.endsWith('/list_participants')?{result:[{id:'recon-correct',name:'RECON',type:'agent'},{id:'auditor-id',name:'AUDITOR',type:'agent'},{id:'resolver-id',name:'RESOLVER',type:'agent'}]}:{result:{threads:[{root:{id:'task-root',kind:'message',sender:'orchestrator-1',sender_name:'MATCHPOINT',body:'task',timestamp:'2026-11-05T00:00:00Z'},replies:[{id:'reply-1',kind:'message',sender:'wrong-agent',sender_name:'RECON',body:'{}',timestamp:'2026-11-05T00:00:02Z'}]}],truncated:false,oldest_timestamp:null}});
+  assert.equal((await adapter.checkConnection()).connected,true);
+  await assert.rejects(adapter.waitForAgentReply({role:'RECON',after:Date.parse('2026-11-05T00:00:00Z'),threadId:'task-root',timeoutMs:5,pollMs:1}),e=>e.code==='agent_timeout');
+});
+
 test('reply polling times out when only a wrong participant or unrelated thread replies',async()=>{
   const {adapter}=fixture(()=>({result:{threads:[{root:{id:'other-root',kind:'message',sender:'x',sender_name:'RECON',body:'{}',timestamp:'2026-11-05T00:00:02Z'},replies:[]}],truncated:false,oldest_timestamp:null}}));
   await assert.rejects(adapter.waitForAgentReply({role:'RECON',after:Date.parse('2026-11-05T00:00:00Z'),threadId:'task-root',timeoutMs:5,pollMs:1}),e=>e.code==='agent_timeout');

@@ -4,10 +4,10 @@
       "id": "CASE-001",
       "synthetic": true,
       "vendor": "Apex Industrial Supplies",
-      "status": "Needs review",
+      "status": "Investigating",
       "exceptionType": "Price variance",
       "createdAt": "2026-11-04T08:15:00.000Z",
-      "updatedAt": "2026-11-04T09:30:00.000Z",
+      "updatedAt": "2026-11-07T14:14:08.185Z",
       "invoice": {
         "number": "INV-2026-1048",
         "total": 48750,
@@ -70,11 +70,2494 @@
           "relatedFinding": "Unsupported additional charge"
         }
       ],
+      "decision": {
+        "action": "Request further investigation",
+        "reason": "Further investigation is required before approving invoice INV-2026-1048. The invoice total is $48,750, while the purchase order PO-2026-089 authorizes $45,000. The invoice includes an additional $3,750 charge for which no approved PO amendment or supporting documentation has been provided. Additionally, the goods receipt records only $42,000 against the $45,000 purchase order.\n\nPlease obtain:\n1. An approved PO amendment or written authorization for the additional $3,750 charge.\n2. Supplier documentation explaining the additional charge.\n3. Delivery receipts or goods-received confirmation for the outstanding $3,000.\n\nKeep the invoice on hold until the discrepancies are verified and a human reviewer approves the resolution. Do not count the additional charge twice.",
+        "actor": "Morgan Patel",
+        "timestamp": "2026-11-07T05:31:17.727Z"
+      },
+      "reconciliationRuns": 0,
+      "investigations": [
+        {
+          "id": "13e3cf95-bf12-4297-9d0c-18da1338398e",
+          "caseId": "CASE-001",
+          "mode": "SIMULATED",
+          "engine": "rules",
+          "roomId": null,
+          "status": "completed",
+          "startedAt": "2026-11-06T18:29:52.731Z",
+          "completedAt": "2026-11-06T18:29:53.311Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "complete",
+              "output": {
+                "invoiceAmount": 48750,
+                "poAmount": 45000,
+                "goodsReceivedAmount": 42000,
+                "invoiceToPoVariance": 3750,
+                "poToReceiptVariance": 3000,
+                "unsupportedCharges": 3750,
+                "totalExposure": 3750,
+                "missingEvidence": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "findings": [
+                  {
+                    "code": "INV_PO_VARIANCE",
+                    "title": "Invoice exceeds purchase order",
+                    "detail": "INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.",
+                    "severity": "High",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "RECEIPT_SHORTFALL",
+                    "title": "Goods received below purchase order",
+                    "detail": "Recorded received value is $42,000, $3,000 below the PO total.",
+                    "severity": "High",
+                    "amount": 3000,
+                    "evidence": [
+                      "goods-received-record",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "UNSUPPORTED_CHARGE",
+                    "title": "Additional charge lacks support",
+                    "detail": "A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.",
+                    "severity": "High",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "additional-charge-receipt"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_1",
+                    "title": "Purchase order amendment missing",
+                    "detail": "Purchase order amendment was listed as required but was not provided in the case file.",
+                    "severity": "Needs evidence",
+                    "amount": null,
+                    "evidence": [
+                      "po-amendment"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_2",
+                    "title": "Additional charge receipt missing",
+                    "detail": "Additional charge receipt was listed as required but was not provided in the case file.",
+                    "severity": "Needs evidence",
+                    "amount": null,
+                    "evidence": [
+                      "additional-charge-receipt"
+                    ]
+                  }
+                ],
+                "preliminaryRecommendation": "Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment.",
+                "sourceFacts": [
+                  "Invoice total: $48,750.",
+                  "PO total: $45,000.",
+                  "Goods-received value: $42,000.",
+                  "Additional charge: $3,750 included in invoice total."
+                ],
+                "assumptions": [
+                  "No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred."
+                ]
+              },
+              "rawOutput": "{\"invoiceAmount\":48750,\"poAmount\":45000,\"goodsReceivedAmount\":42000,\"invoiceToPoVariance\":3750,\"poToReceiptVariance\":3000,\"unsupportedCharges\":3750,\"totalExposure\":3750,\"missingEvidence\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"findings\":[{\"code\":\"INV_PO_VARIANCE\",\"title\":\"Invoice exceeds purchase order\",\"detail\":\"INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.\",\"severity\":\"High\",\"amount\":3750,\"evidence\":[\"invoice\",\"purchase-order\"]},{\"code\":\"RECEIPT_SHORTFALL\",\"title\":\"Goods received below purchase order\",\"detail\":\"Recorded received value is $42,000, $3,000 below the PO total.\",\"severity\":\"High\",\"amount\":3000,\"evidence\":[\"goods-received-record\",\"purchase-order\"]},{\"code\":\"UNSUPPORTED_CHARGE\",\"title\":\"Additional charge lacks support\",\"detail\":\"A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.\",\"severity\":\"High\",\"amount\":3750,\"evidence\":[\"invoice\",\"additional-charge-receipt\"]},{\"code\":\"MISSING_EVIDENCE_1\",\"title\":\"Purchase order amendment missing\",\"detail\":\"Purchase order amendment was listed as required but was not provided in the case file.\",\"severity\":\"Needs evidence\",\"amount\":null,\"evidence\":[\"po-amendment\"]},{\"code\":\"MISSING_EVIDENCE_2\",\"title\":\"Additional charge receipt missing\",\"detail\":\"Additional charge receipt was listed as required but was not provided in the case file.\",\"severity\":\"Needs evidence\",\"amount\":null,\"evidence\":[\"additional-charge-receipt\"]}],\"preliminaryRecommendation\":\"Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment.\",\"sourceFacts\":[\"Invoice total: $48,750.\",\"PO total: $45,000.\",\"Goods-received value: $42,000.\",\"Additional charge: $3,750 included in invoice total.\"],\"assumptions\":[\"No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred.\"]}",
+              "error": null,
+              "startedAt": "2026-11-06T18:29:52.735Z",
+              "completedAt": "2026-11-06T18:29:52.922Z",
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "complete",
+              "output": {
+                "verifiedFindings": [
+                  "invoiceAmount verified at 48750.",
+                  "poAmount verified at 45000.",
+                  "goodsReceivedAmount verified at 42000.",
+                  "invoiceToPoVariance verified at 3750.",
+                  "poToReceiptVariance verified at 3000.",
+                  "unsupportedCharges verified at 3750."
+                ],
+                "disputedFindings": [],
+                "calculationChecks": [
+                  {
+                    "field": "invoiceAmount",
+                    "expected": 48750,
+                    "reported": 48750,
+                    "passed": true
+                  },
+                  {
+                    "field": "poAmount",
+                    "expected": 45000,
+                    "reported": 45000,
+                    "passed": true
+                  },
+                  {
+                    "field": "goodsReceivedAmount",
+                    "expected": 42000,
+                    "reported": 42000,
+                    "passed": true
+                  },
+                  {
+                    "field": "invoiceToPoVariance",
+                    "expected": 3750,
+                    "reported": 3750,
+                    "passed": true
+                  },
+                  {
+                    "field": "poToReceiptVariance",
+                    "expected": 3000,
+                    "reported": 3000,
+                    "passed": true
+                  },
+                  {
+                    "field": "unsupportedCharges",
+                    "expected": 3750,
+                    "reported": 3750,
+                    "passed": true
+                  }
+                ],
+                "evidenceGaps": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "auditConclusion": "RECON arithmetic and evidence references independently verified against source case data.",
+                "verificationStatus": "VERIFIED"
+              },
+              "rawOutput": "{\"verifiedFindings\":[\"invoiceAmount verified at 48750.\",\"poAmount verified at 45000.\",\"goodsReceivedAmount verified at 42000.\",\"invoiceToPoVariance verified at 3750.\",\"poToReceiptVariance verified at 3000.\",\"unsupportedCharges verified at 3750.\"],\"disputedFindings\":[],\"calculationChecks\":[{\"field\":\"invoiceAmount\",\"expected\":48750,\"reported\":48750,\"passed\":true},{\"field\":\"poAmount\",\"expected\":45000,\"reported\":45000,\"passed\":true},{\"field\":\"goodsReceivedAmount\",\"expected\":42000,\"reported\":42000,\"passed\":true},{\"field\":\"invoiceToPoVariance\",\"expected\":3750,\"reported\":3750,\"passed\":true},{\"field\":\"poToReceiptVariance\",\"expected\":3000,\"reported\":3000,\"passed\":true},{\"field\":\"unsupportedCharges\",\"expected\":3750,\"reported\":3750,\"passed\":true}],\"evidenceGaps\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"auditConclusion\":\"RECON arithmetic and evidence references independently verified against source case data.\",\"verificationStatus\":\"VERIFIED\"}",
+              "error": null,
+              "startedAt": "2026-11-06T18:29:52.929Z",
+              "completedAt": "2026-11-06T18:29:53.115Z",
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "complete",
+              "output": {
+                "executiveRecommendation": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+                "reason": "3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.",
+                "supportingFindings": [
+                  {
+                    "code": "INV_PO_VARIANCE",
+                    "title": "Invoice exceeds purchase order",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "RECEIPT_SHORTFALL",
+                    "title": "Goods received below purchase order",
+                    "amount": 3000,
+                    "evidence": [
+                      "goods-received-record",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "UNSUPPORTED_CHARGE",
+                    "title": "Additional charge lacks support",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "additional-charge-receipt"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_1",
+                    "title": "Purchase order amendment missing",
+                    "amount": null,
+                    "evidence": [
+                      "po-amendment"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_2",
+                    "title": "Additional charge receipt missing",
+                    "amount": null,
+                    "evidence": [
+                      "additional-charge-receipt"
+                    ]
+                  }
+                ],
+                "outstandingEvidence": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "requiredNextActions": [
+                  "Request the purchase order amendment",
+                  "Request the additional-charge receipt",
+                  "Clarify the goods-received shortfall",
+                  "Obtain human review and record a reasoned decision"
+                ],
+                "suggestedVendorClarification": "Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.",
+                "unresolvedDisagreements": [],
+                "humanApprovalRequired": true,
+                "paymentAuthorized": false
+              },
+              "rawOutput": "{\"executiveRecommendation\":\"HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW\",\"reason\":\"3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.\",\"supportingFindings\":[{\"code\":\"INV_PO_VARIANCE\",\"title\":\"Invoice exceeds purchase order\",\"amount\":3750,\"evidence\":[\"invoice\",\"purchase-order\"]},{\"code\":\"RECEIPT_SHORTFALL\",\"title\":\"Goods received below purchase order\",\"amount\":3000,\"evidence\":[\"goods-received-record\",\"purchase-order\"]},{\"code\":\"UNSUPPORTED_CHARGE\",\"title\":\"Additional charge lacks support\",\"amount\":3750,\"evidence\":[\"invoice\",\"additional-charge-receipt\"]},{\"code\":\"MISSING_EVIDENCE_1\",\"title\":\"Purchase order amendment missing\",\"amount\":null,\"evidence\":[\"po-amendment\"]},{\"code\":\"MISSING_EVIDENCE_2\",\"title\":\"Additional charge receipt missing\",\"amount\":null,\"evidence\":[\"additional-charge-receipt\"]}],\"outstandingEvidence\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"requiredNextActions\":[\"Request the purchase order amendment\",\"Request the additional-charge receipt\",\"Clarify the goods-received shortfall\",\"Obtain human review and record a reasoned decision\"],\"suggestedVendorClarification\":\"Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.\",\"unresolvedDisagreements\":[],\"humanApprovalRequired\":true,\"paymentAuthorized\":false}",
+              "error": null,
+              "startedAt": "2026-11-06T18:29:53.120Z",
+              "completedAt": "2026-11-06T18:29:53.305Z",
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "f6a21822-33fa-492f-acfb-f6991c8eca8a",
+              "timestamp": "2026-11-06T18:29:52.737Z",
+              "mode": "SIMULATED",
+              "actor": "RECON",
+              "kind": "delegation",
+              "title": "RECON task dispatched",
+              "summary": "RECON received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "8df288bc-875f-43c0-84a3-acf61113880e",
+              "timestamp": "2026-11-06T18:29:52.923Z",
+              "mode": "SIMULATED",
+              "actor": "RECON",
+              "kind": "simulated",
+              "title": "RECON stage complete",
+              "summary": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "37cc347b-7989-41ea-a757-6e9883dce57c",
+              "timestamp": "2026-11-06T18:29:52.930Z",
+              "mode": "SIMULATED",
+              "actor": "AUDITOR",
+              "kind": "delegation",
+              "title": "AUDITOR task dispatched",
+              "summary": "AUDITOR received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "d77638e3-8f82-4d37-b099-769b9b6b93f6",
+              "timestamp": "2026-11-06T18:29:53.116Z",
+              "mode": "SIMULATED",
+              "actor": "AUDITOR",
+              "kind": "simulated",
+              "title": "AUDITOR stage complete",
+              "summary": "RECON arithmetic and evidence references independently verified against source case data.",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "34c53d2c-5c2d-48d6-bff9-f23114604168",
+              "timestamp": "2026-11-06T18:29:53.121Z",
+              "mode": "SIMULATED",
+              "actor": "RESOLVER",
+              "kind": "delegation",
+              "title": "RESOLVER task dispatched",
+              "summary": "RESOLVER received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "f11bf126-c23d-47bf-9eb8-06b31046013d",
+              "timestamp": "2026-11-06T18:29:53.307Z",
+              "mode": "SIMULATED",
+              "actor": "RESOLVER",
+              "kind": "simulated",
+              "title": "RESOLVER stage complete",
+              "summary": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "5e671c9e-e382-4374-b090-f4057ae96563",
+              "timestamp": "2026-11-06T18:29:53.312Z",
+              "mode": "SIMULATED",
+              "actor": "MATCHPOINT",
+              "kind": "backend_calculation",
+              "title": "Investigation package completed",
+              "summary": "All three agent stages completed. Human approval is still required; no payment action was taken."
+            }
+          ],
+          "error": null,
+          "recommendation": {
+            "executiveRecommendation": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+            "reason": "3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.",
+            "supportingFindings": [
+              {
+                "code": "INV_PO_VARIANCE",
+                "title": "Invoice exceeds purchase order",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "RECEIPT_SHORTFALL",
+                "title": "Goods received below purchase order",
+                "amount": 3000,
+                "evidence": [
+                  "goods-received-record",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "UNSUPPORTED_CHARGE",
+                "title": "Additional charge lacks support",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "additional-charge-receipt"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_1",
+                "title": "Purchase order amendment missing",
+                "amount": null,
+                "evidence": [
+                  "po-amendment"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_2",
+                "title": "Additional charge receipt missing",
+                "amount": null,
+                "evidence": [
+                  "additional-charge-receipt"
+                ]
+              }
+            ],
+            "outstandingEvidence": [
+              "Purchase order amendment",
+              "Additional charge receipt"
+            ],
+            "requiredNextActions": [
+              "Request the purchase order amendment",
+              "Request the additional-charge receipt",
+              "Clarify the goods-received shortfall",
+              "Obtain human review and record a reasoned decision"
+            ],
+            "suggestedVendorClarification": "Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.",
+            "unresolvedDisagreements": [],
+            "humanApprovalRequired": true,
+            "paymentAuthorized": false
+          },
+          "calculations": {
+            "runNumber": 1,
+            "currency": "USD",
+            "invoiceToPoVariance": 3750,
+            "invoiceToPoPercent": 8.33,
+            "receivedShortfall": 3000,
+            "receivedShortfallPercent": 6.67,
+            "unsupportedCharge": 3750,
+            "totalExposure": 3750,
+            "findings": [
+              {
+                "code": "INV_PO_VARIANCE",
+                "title": "Invoice exceeds purchase order",
+                "detail": "INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.",
+                "severity": "High",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "RECEIPT_SHORTFALL",
+                "title": "Goods received below purchase order",
+                "detail": "Recorded received value is $42,000, $3,000 below the PO total.",
+                "severity": "High",
+                "amount": 3000,
+                "evidence": [
+                  "goods-received-record",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "UNSUPPORTED_CHARGE",
+                "title": "Additional charge lacks support",
+                "detail": "A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.",
+                "severity": "High",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "additional-charge-receipt"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_1",
+                "title": "Purchase order amendment missing",
+                "detail": "Purchase order amendment was listed as required but was not provided in the case file.",
+                "severity": "Needs evidence",
+                "amount": null,
+                "evidence": [
+                  "po-amendment"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_2",
+                "title": "Additional charge receipt missing",
+                "detail": "Additional charge receipt was listed as required but was not provided in the case file.",
+                "severity": "Needs evidence",
+                "amount": null,
+                "evidence": [
+                  "additional-charge-receipt"
+                ]
+              }
+            ],
+            "facts": [
+              "Invoice total: $48,750.",
+              "PO total: $45,000.",
+              "Goods-received value: $42,000.",
+              "Additional charge: $3,750 included in invoice total."
+            ],
+            "assumptions": [
+              "No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred."
+            ],
+            "unresolvedQuestions": [
+              "Can the vendor provide the PO amendment authorizing the additional charge?",
+              "Can the vendor provide a receipt for the $3,750 additional charge?",
+              "Can the receiving team explain the $3,000 difference between PO and received value?"
+            ],
+            "recommendation": "Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment."
+          }
+        },
+        {
+          "id": "4352dfc4-c0d5-42bf-be8f-c7fca780478b",
+          "caseId": "CASE-001",
+          "mode": "SIMULATED",
+          "engine": "rules",
+          "roomId": null,
+          "status": "completed",
+          "startedAt": "2026-11-07T04:25:45.875Z",
+          "completedAt": "2026-11-07T04:25:46.471Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "complete",
+              "output": {
+                "invoiceAmount": 48750,
+                "poAmount": 45000,
+                "goodsReceivedAmount": 42000,
+                "invoiceToPoVariance": 3750,
+                "poToReceiptVariance": 3000,
+                "unsupportedCharges": 3750,
+                "totalExposure": 3750,
+                "missingEvidence": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "findings": [
+                  {
+                    "code": "INV_PO_VARIANCE",
+                    "title": "Invoice exceeds purchase order",
+                    "detail": "INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.",
+                    "severity": "High",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "RECEIPT_SHORTFALL",
+                    "title": "Goods received below purchase order",
+                    "detail": "Recorded received value is $42,000, $3,000 below the PO total.",
+                    "severity": "High",
+                    "amount": 3000,
+                    "evidence": [
+                      "goods-received-record",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "UNSUPPORTED_CHARGE",
+                    "title": "Additional charge lacks support",
+                    "detail": "A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.",
+                    "severity": "High",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "additional-charge-receipt"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_1",
+                    "title": "Purchase order amendment missing",
+                    "detail": "Purchase order amendment was listed as required but was not provided in the case file.",
+                    "severity": "Needs evidence",
+                    "amount": null,
+                    "evidence": [
+                      "po-amendment"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_2",
+                    "title": "Additional charge receipt missing",
+                    "detail": "Additional charge receipt was listed as required but was not provided in the case file.",
+                    "severity": "Needs evidence",
+                    "amount": null,
+                    "evidence": [
+                      "additional-charge-receipt"
+                    ]
+                  }
+                ],
+                "preliminaryRecommendation": "Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment.",
+                "sourceFacts": [
+                  "Invoice total: $48,750.",
+                  "PO total: $45,000.",
+                  "Goods-received value: $42,000.",
+                  "Additional charge: $3,750 included in invoice total."
+                ],
+                "assumptions": [
+                  "No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred."
+                ]
+              },
+              "rawOutput": "{\"invoiceAmount\":48750,\"poAmount\":45000,\"goodsReceivedAmount\":42000,\"invoiceToPoVariance\":3750,\"poToReceiptVariance\":3000,\"unsupportedCharges\":3750,\"totalExposure\":3750,\"missingEvidence\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"findings\":[{\"code\":\"INV_PO_VARIANCE\",\"title\":\"Invoice exceeds purchase order\",\"detail\":\"INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.\",\"severity\":\"High\",\"amount\":3750,\"evidence\":[\"invoice\",\"purchase-order\"]},{\"code\":\"RECEIPT_SHORTFALL\",\"title\":\"Goods received below purchase order\",\"detail\":\"Recorded received value is $42,000, $3,000 below the PO total.\",\"severity\":\"High\",\"amount\":3000,\"evidence\":[\"goods-received-record\",\"purchase-order\"]},{\"code\":\"UNSUPPORTED_CHARGE\",\"title\":\"Additional charge lacks support\",\"detail\":\"A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.\",\"severity\":\"High\",\"amount\":3750,\"evidence\":[\"invoice\",\"additional-charge-receipt\"]},{\"code\":\"MISSING_EVIDENCE_1\",\"title\":\"Purchase order amendment missing\",\"detail\":\"Purchase order amendment was listed as required but was not provided in the case file.\",\"severity\":\"Needs evidence\",\"amount\":null,\"evidence\":[\"po-amendment\"]},{\"code\":\"MISSING_EVIDENCE_2\",\"title\":\"Additional charge receipt missing\",\"detail\":\"Additional charge receipt was listed as required but was not provided in the case file.\",\"severity\":\"Needs evidence\",\"amount\":null,\"evidence\":[\"additional-charge-receipt\"]}],\"preliminaryRecommendation\":\"Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment.\",\"sourceFacts\":[\"Invoice total: $48,750.\",\"PO total: $45,000.\",\"Goods-received value: $42,000.\",\"Additional charge: $3,750 included in invoice total.\"],\"assumptions\":[\"No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred.\"]}",
+              "error": null,
+              "startedAt": "2026-11-07T04:25:45.894Z",
+              "completedAt": "2026-11-07T04:25:46.081Z",
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "complete",
+              "output": {
+                "verifiedFindings": [
+                  "invoiceAmount verified at 48750.",
+                  "poAmount verified at 45000.",
+                  "goodsReceivedAmount verified at 42000.",
+                  "invoiceToPoVariance verified at 3750.",
+                  "poToReceiptVariance verified at 3000.",
+                  "unsupportedCharges verified at 3750."
+                ],
+                "disputedFindings": [],
+                "calculationChecks": [
+                  {
+                    "field": "invoiceAmount",
+                    "expected": 48750,
+                    "reported": 48750,
+                    "passed": true
+                  },
+                  {
+                    "field": "poAmount",
+                    "expected": 45000,
+                    "reported": 45000,
+                    "passed": true
+                  },
+                  {
+                    "field": "goodsReceivedAmount",
+                    "expected": 42000,
+                    "reported": 42000,
+                    "passed": true
+                  },
+                  {
+                    "field": "invoiceToPoVariance",
+                    "expected": 3750,
+                    "reported": 3750,
+                    "passed": true
+                  },
+                  {
+                    "field": "poToReceiptVariance",
+                    "expected": 3000,
+                    "reported": 3000,
+                    "passed": true
+                  },
+                  {
+                    "field": "unsupportedCharges",
+                    "expected": 3750,
+                    "reported": 3750,
+                    "passed": true
+                  }
+                ],
+                "evidenceGaps": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "auditConclusion": "RECON arithmetic and evidence references independently verified against source case data.",
+                "verificationStatus": "VERIFIED"
+              },
+              "rawOutput": "{\"verifiedFindings\":[\"invoiceAmount verified at 48750.\",\"poAmount verified at 45000.\",\"goodsReceivedAmount verified at 42000.\",\"invoiceToPoVariance verified at 3750.\",\"poToReceiptVariance verified at 3000.\",\"unsupportedCharges verified at 3750.\"],\"disputedFindings\":[],\"calculationChecks\":[{\"field\":\"invoiceAmount\",\"expected\":48750,\"reported\":48750,\"passed\":true},{\"field\":\"poAmount\",\"expected\":45000,\"reported\":45000,\"passed\":true},{\"field\":\"goodsReceivedAmount\",\"expected\":42000,\"reported\":42000,\"passed\":true},{\"field\":\"invoiceToPoVariance\",\"expected\":3750,\"reported\":3750,\"passed\":true},{\"field\":\"poToReceiptVariance\",\"expected\":3000,\"reported\":3000,\"passed\":true},{\"field\":\"unsupportedCharges\",\"expected\":3750,\"reported\":3750,\"passed\":true}],\"evidenceGaps\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"auditConclusion\":\"RECON arithmetic and evidence references independently verified against source case data.\",\"verificationStatus\":\"VERIFIED\"}",
+              "error": null,
+              "startedAt": "2026-11-07T04:25:46.087Z",
+              "completedAt": "2026-11-07T04:25:46.273Z",
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "complete",
+              "output": {
+                "executiveRecommendation": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+                "reason": "3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.",
+                "supportingFindings": [
+                  {
+                    "code": "INV_PO_VARIANCE",
+                    "title": "Invoice exceeds purchase order",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "RECEIPT_SHORTFALL",
+                    "title": "Goods received below purchase order",
+                    "amount": 3000,
+                    "evidence": [
+                      "goods-received-record",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "UNSUPPORTED_CHARGE",
+                    "title": "Additional charge lacks support",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "additional-charge-receipt"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_1",
+                    "title": "Purchase order amendment missing",
+                    "amount": null,
+                    "evidence": [
+                      "po-amendment"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_2",
+                    "title": "Additional charge receipt missing",
+                    "amount": null,
+                    "evidence": [
+                      "additional-charge-receipt"
+                    ]
+                  }
+                ],
+                "outstandingEvidence": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "requiredNextActions": [
+                  "Request the purchase order amendment",
+                  "Request the additional-charge receipt",
+                  "Clarify the goods-received shortfall",
+                  "Obtain human review and record a reasoned decision"
+                ],
+                "suggestedVendorClarification": "Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.",
+                "unresolvedDisagreements": [],
+                "humanApprovalRequired": true,
+                "paymentAuthorized": false
+              },
+              "rawOutput": "{\"executiveRecommendation\":\"HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW\",\"reason\":\"3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.\",\"supportingFindings\":[{\"code\":\"INV_PO_VARIANCE\",\"title\":\"Invoice exceeds purchase order\",\"amount\":3750,\"evidence\":[\"invoice\",\"purchase-order\"]},{\"code\":\"RECEIPT_SHORTFALL\",\"title\":\"Goods received below purchase order\",\"amount\":3000,\"evidence\":[\"goods-received-record\",\"purchase-order\"]},{\"code\":\"UNSUPPORTED_CHARGE\",\"title\":\"Additional charge lacks support\",\"amount\":3750,\"evidence\":[\"invoice\",\"additional-charge-receipt\"]},{\"code\":\"MISSING_EVIDENCE_1\",\"title\":\"Purchase order amendment missing\",\"amount\":null,\"evidence\":[\"po-amendment\"]},{\"code\":\"MISSING_EVIDENCE_2\",\"title\":\"Additional charge receipt missing\",\"amount\":null,\"evidence\":[\"additional-charge-receipt\"]}],\"outstandingEvidence\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"requiredNextActions\":[\"Request the purchase order amendment\",\"Request the additional-charge receipt\",\"Clarify the goods-received shortfall\",\"Obtain human review and record a reasoned decision\"],\"suggestedVendorClarification\":\"Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.\",\"unresolvedDisagreements\":[],\"humanApprovalRequired\":true,\"paymentAuthorized\":false}",
+              "error": null,
+              "startedAt": "2026-11-07T04:25:46.279Z",
+              "completedAt": "2026-11-07T04:25:46.464Z",
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "4f100b75-dbea-47f8-b9fd-6a99a5bda562",
+              "timestamp": "2026-11-07T04:25:45.896Z",
+              "mode": "SIMULATED",
+              "actor": "RECON",
+              "kind": "delegation",
+              "title": "RECON task dispatched",
+              "summary": "RECON received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "e7fd8a8f-b442-4513-b647-c843b120af8e",
+              "timestamp": "2026-11-07T04:25:46.083Z",
+              "mode": "SIMULATED",
+              "actor": "RECON",
+              "kind": "simulated",
+              "title": "RECON stage complete",
+              "summary": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "caf69519-efa7-4534-92c6-71d74b3dc8fc",
+              "timestamp": "2026-11-07T04:25:46.088Z",
+              "mode": "SIMULATED",
+              "actor": "AUDITOR",
+              "kind": "delegation",
+              "title": "AUDITOR task dispatched",
+              "summary": "AUDITOR received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "3acc3537-1d91-456e-b3b2-d3c7adc55133",
+              "timestamp": "2026-11-07T04:25:46.275Z",
+              "mode": "SIMULATED",
+              "actor": "AUDITOR",
+              "kind": "simulated",
+              "title": "AUDITOR stage complete",
+              "summary": "RECON arithmetic and evidence references independently verified against source case data.",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "f357a049-b467-4c95-a3a4-fb85c02f6729",
+              "timestamp": "2026-11-07T04:25:46.280Z",
+              "mode": "SIMULATED",
+              "actor": "RESOLVER",
+              "kind": "delegation",
+              "title": "RESOLVER task dispatched",
+              "summary": "RESOLVER received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "67323e3a-98ce-4d44-9e62-ca4022f33c75",
+              "timestamp": "2026-11-07T04:25:46.466Z",
+              "mode": "SIMULATED",
+              "actor": "RESOLVER",
+              "kind": "simulated",
+              "title": "RESOLVER stage complete",
+              "summary": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "1ba43cf6-a579-4228-b35b-83c95d02ae99",
+              "timestamp": "2026-11-07T04:25:46.471Z",
+              "mode": "SIMULATED",
+              "actor": "MATCHPOINT",
+              "kind": "backend_calculation",
+              "title": "Investigation package completed",
+              "summary": "All three agent stages completed. Human approval is still required; no payment action was taken."
+            }
+          ],
+          "error": null,
+          "recommendation": {
+            "executiveRecommendation": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+            "reason": "3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.",
+            "supportingFindings": [
+              {
+                "code": "INV_PO_VARIANCE",
+                "title": "Invoice exceeds purchase order",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "RECEIPT_SHORTFALL",
+                "title": "Goods received below purchase order",
+                "amount": 3000,
+                "evidence": [
+                  "goods-received-record",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "UNSUPPORTED_CHARGE",
+                "title": "Additional charge lacks support",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "additional-charge-receipt"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_1",
+                "title": "Purchase order amendment missing",
+                "amount": null,
+                "evidence": [
+                  "po-amendment"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_2",
+                "title": "Additional charge receipt missing",
+                "amount": null,
+                "evidence": [
+                  "additional-charge-receipt"
+                ]
+              }
+            ],
+            "outstandingEvidence": [
+              "Purchase order amendment",
+              "Additional charge receipt"
+            ],
+            "requiredNextActions": [
+              "Request the purchase order amendment",
+              "Request the additional-charge receipt",
+              "Clarify the goods-received shortfall",
+              "Obtain human review and record a reasoned decision"
+            ],
+            "suggestedVendorClarification": "Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.",
+            "unresolvedDisagreements": [],
+            "humanApprovalRequired": true,
+            "paymentAuthorized": false
+          },
+          "calculations": {
+            "runNumber": 1,
+            "currency": "USD",
+            "invoiceToPoVariance": 3750,
+            "invoiceToPoPercent": 8.33,
+            "receivedShortfall": 3000,
+            "receivedShortfallPercent": 6.67,
+            "unsupportedCharge": 3750,
+            "totalExposure": 3750,
+            "findings": [
+              {
+                "code": "INV_PO_VARIANCE",
+                "title": "Invoice exceeds purchase order",
+                "detail": "INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.",
+                "severity": "High",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "RECEIPT_SHORTFALL",
+                "title": "Goods received below purchase order",
+                "detail": "Recorded received value is $42,000, $3,000 below the PO total.",
+                "severity": "High",
+                "amount": 3000,
+                "evidence": [
+                  "goods-received-record",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "UNSUPPORTED_CHARGE",
+                "title": "Additional charge lacks support",
+                "detail": "A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.",
+                "severity": "High",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "additional-charge-receipt"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_1",
+                "title": "Purchase order amendment missing",
+                "detail": "Purchase order amendment was listed as required but was not provided in the case file.",
+                "severity": "Needs evidence",
+                "amount": null,
+                "evidence": [
+                  "po-amendment"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_2",
+                "title": "Additional charge receipt missing",
+                "detail": "Additional charge receipt was listed as required but was not provided in the case file.",
+                "severity": "Needs evidence",
+                "amount": null,
+                "evidence": [
+                  "additional-charge-receipt"
+                ]
+              }
+            ],
+            "facts": [
+              "Invoice total: $48,750.",
+              "PO total: $45,000.",
+              "Goods-received value: $42,000.",
+              "Additional charge: $3,750 included in invoice total."
+            ],
+            "assumptions": [
+              "No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred."
+            ],
+            "unresolvedQuestions": [
+              "Can the vendor provide the PO amendment authorizing the additional charge?",
+              "Can the vendor provide a receipt for the $3,750 additional charge?",
+              "Can the receiving team explain the $3,000 difference between PO and received value?"
+            ],
+            "recommendation": "Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment."
+          }
+        },
+        {
+          "id": "31b1215e-4917-4e31-87c5-9947655a6b9d",
+          "caseId": "CASE-001",
+          "mode": "SIMULATED",
+          "engine": "rules",
+          "roomId": null,
+          "status": "completed",
+          "startedAt": "2026-11-07T04:25:48.113Z",
+          "completedAt": "2026-11-07T04:25:48.696Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "complete",
+              "output": {
+                "invoiceAmount": 48750,
+                "poAmount": 45000,
+                "goodsReceivedAmount": 42000,
+                "invoiceToPoVariance": 3750,
+                "poToReceiptVariance": 3000,
+                "unsupportedCharges": 3750,
+                "totalExposure": 3750,
+                "missingEvidence": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "findings": [
+                  {
+                    "code": "INV_PO_VARIANCE",
+                    "title": "Invoice exceeds purchase order",
+                    "detail": "INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.",
+                    "severity": "High",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "RECEIPT_SHORTFALL",
+                    "title": "Goods received below purchase order",
+                    "detail": "Recorded received value is $42,000, $3,000 below the PO total.",
+                    "severity": "High",
+                    "amount": 3000,
+                    "evidence": [
+                      "goods-received-record",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "UNSUPPORTED_CHARGE",
+                    "title": "Additional charge lacks support",
+                    "detail": "A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.",
+                    "severity": "High",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "additional-charge-receipt"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_1",
+                    "title": "Purchase order amendment missing",
+                    "detail": "Purchase order amendment was listed as required but was not provided in the case file.",
+                    "severity": "Needs evidence",
+                    "amount": null,
+                    "evidence": [
+                      "po-amendment"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_2",
+                    "title": "Additional charge receipt missing",
+                    "detail": "Additional charge receipt was listed as required but was not provided in the case file.",
+                    "severity": "Needs evidence",
+                    "amount": null,
+                    "evidence": [
+                      "additional-charge-receipt"
+                    ]
+                  }
+                ],
+                "preliminaryRecommendation": "Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment.",
+                "sourceFacts": [
+                  "Invoice total: $48,750.",
+                  "PO total: $45,000.",
+                  "Goods-received value: $42,000.",
+                  "Additional charge: $3,750 included in invoice total."
+                ],
+                "assumptions": [
+                  "No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred."
+                ]
+              },
+              "rawOutput": "{\"invoiceAmount\":48750,\"poAmount\":45000,\"goodsReceivedAmount\":42000,\"invoiceToPoVariance\":3750,\"poToReceiptVariance\":3000,\"unsupportedCharges\":3750,\"totalExposure\":3750,\"missingEvidence\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"findings\":[{\"code\":\"INV_PO_VARIANCE\",\"title\":\"Invoice exceeds purchase order\",\"detail\":\"INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.\",\"severity\":\"High\",\"amount\":3750,\"evidence\":[\"invoice\",\"purchase-order\"]},{\"code\":\"RECEIPT_SHORTFALL\",\"title\":\"Goods received below purchase order\",\"detail\":\"Recorded received value is $42,000, $3,000 below the PO total.\",\"severity\":\"High\",\"amount\":3000,\"evidence\":[\"goods-received-record\",\"purchase-order\"]},{\"code\":\"UNSUPPORTED_CHARGE\",\"title\":\"Additional charge lacks support\",\"detail\":\"A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.\",\"severity\":\"High\",\"amount\":3750,\"evidence\":[\"invoice\",\"additional-charge-receipt\"]},{\"code\":\"MISSING_EVIDENCE_1\",\"title\":\"Purchase order amendment missing\",\"detail\":\"Purchase order amendment was listed as required but was not provided in the case file.\",\"severity\":\"Needs evidence\",\"amount\":null,\"evidence\":[\"po-amendment\"]},{\"code\":\"MISSING_EVIDENCE_2\",\"title\":\"Additional charge receipt missing\",\"detail\":\"Additional charge receipt was listed as required but was not provided in the case file.\",\"severity\":\"Needs evidence\",\"amount\":null,\"evidence\":[\"additional-charge-receipt\"]}],\"preliminaryRecommendation\":\"Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment.\",\"sourceFacts\":[\"Invoice total: $48,750.\",\"PO total: $45,000.\",\"Goods-received value: $42,000.\",\"Additional charge: $3,750 included in invoice total.\"],\"assumptions\":[\"No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred.\"]}",
+              "error": null,
+              "startedAt": "2026-11-07T04:25:48.117Z",
+              "completedAt": "2026-11-07T04:25:48.303Z",
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "complete",
+              "output": {
+                "verifiedFindings": [
+                  "invoiceAmount verified at 48750.",
+                  "poAmount verified at 45000.",
+                  "goodsReceivedAmount verified at 42000.",
+                  "invoiceToPoVariance verified at 3750.",
+                  "poToReceiptVariance verified at 3000.",
+                  "unsupportedCharges verified at 3750."
+                ],
+                "disputedFindings": [],
+                "calculationChecks": [
+                  {
+                    "field": "invoiceAmount",
+                    "expected": 48750,
+                    "reported": 48750,
+                    "passed": true
+                  },
+                  {
+                    "field": "poAmount",
+                    "expected": 45000,
+                    "reported": 45000,
+                    "passed": true
+                  },
+                  {
+                    "field": "goodsReceivedAmount",
+                    "expected": 42000,
+                    "reported": 42000,
+                    "passed": true
+                  },
+                  {
+                    "field": "invoiceToPoVariance",
+                    "expected": 3750,
+                    "reported": 3750,
+                    "passed": true
+                  },
+                  {
+                    "field": "poToReceiptVariance",
+                    "expected": 3000,
+                    "reported": 3000,
+                    "passed": true
+                  },
+                  {
+                    "field": "unsupportedCharges",
+                    "expected": 3750,
+                    "reported": 3750,
+                    "passed": true
+                  }
+                ],
+                "evidenceGaps": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "auditConclusion": "RECON arithmetic and evidence references independently verified against source case data.",
+                "verificationStatus": "VERIFIED"
+              },
+              "rawOutput": "{\"verifiedFindings\":[\"invoiceAmount verified at 48750.\",\"poAmount verified at 45000.\",\"goodsReceivedAmount verified at 42000.\",\"invoiceToPoVariance verified at 3750.\",\"poToReceiptVariance verified at 3000.\",\"unsupportedCharges verified at 3750.\"],\"disputedFindings\":[],\"calculationChecks\":[{\"field\":\"invoiceAmount\",\"expected\":48750,\"reported\":48750,\"passed\":true},{\"field\":\"poAmount\",\"expected\":45000,\"reported\":45000,\"passed\":true},{\"field\":\"goodsReceivedAmount\",\"expected\":42000,\"reported\":42000,\"passed\":true},{\"field\":\"invoiceToPoVariance\",\"expected\":3750,\"reported\":3750,\"passed\":true},{\"field\":\"poToReceiptVariance\",\"expected\":3000,\"reported\":3000,\"passed\":true},{\"field\":\"unsupportedCharges\",\"expected\":3750,\"reported\":3750,\"passed\":true}],\"evidenceGaps\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"auditConclusion\":\"RECON arithmetic and evidence references independently verified against source case data.\",\"verificationStatus\":\"VERIFIED\"}",
+              "error": null,
+              "startedAt": "2026-11-07T04:25:48.309Z",
+              "completedAt": "2026-11-07T04:25:48.495Z",
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "complete",
+              "output": {
+                "executiveRecommendation": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+                "reason": "3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.",
+                "supportingFindings": [
+                  {
+                    "code": "INV_PO_VARIANCE",
+                    "title": "Invoice exceeds purchase order",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "RECEIPT_SHORTFALL",
+                    "title": "Goods received below purchase order",
+                    "amount": 3000,
+                    "evidence": [
+                      "goods-received-record",
+                      "purchase-order"
+                    ]
+                  },
+                  {
+                    "code": "UNSUPPORTED_CHARGE",
+                    "title": "Additional charge lacks support",
+                    "amount": 3750,
+                    "evidence": [
+                      "invoice",
+                      "additional-charge-receipt"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_1",
+                    "title": "Purchase order amendment missing",
+                    "amount": null,
+                    "evidence": [
+                      "po-amendment"
+                    ]
+                  },
+                  {
+                    "code": "MISSING_EVIDENCE_2",
+                    "title": "Additional charge receipt missing",
+                    "amount": null,
+                    "evidence": [
+                      "additional-charge-receipt"
+                    ]
+                  }
+                ],
+                "outstandingEvidence": [
+                  "Purchase order amendment",
+                  "Additional charge receipt"
+                ],
+                "requiredNextActions": [
+                  "Request the purchase order amendment",
+                  "Request the additional-charge receipt",
+                  "Clarify the goods-received shortfall",
+                  "Obtain human review and record a reasoned decision"
+                ],
+                "suggestedVendorClarification": "Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.",
+                "unresolvedDisagreements": [],
+                "humanApprovalRequired": true,
+                "paymentAuthorized": false
+              },
+              "rawOutput": "{\"executiveRecommendation\":\"HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW\",\"reason\":\"3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.\",\"supportingFindings\":[{\"code\":\"INV_PO_VARIANCE\",\"title\":\"Invoice exceeds purchase order\",\"amount\":3750,\"evidence\":[\"invoice\",\"purchase-order\"]},{\"code\":\"RECEIPT_SHORTFALL\",\"title\":\"Goods received below purchase order\",\"amount\":3000,\"evidence\":[\"goods-received-record\",\"purchase-order\"]},{\"code\":\"UNSUPPORTED_CHARGE\",\"title\":\"Additional charge lacks support\",\"amount\":3750,\"evidence\":[\"invoice\",\"additional-charge-receipt\"]},{\"code\":\"MISSING_EVIDENCE_1\",\"title\":\"Purchase order amendment missing\",\"amount\":null,\"evidence\":[\"po-amendment\"]},{\"code\":\"MISSING_EVIDENCE_2\",\"title\":\"Additional charge receipt missing\",\"amount\":null,\"evidence\":[\"additional-charge-receipt\"]}],\"outstandingEvidence\":[\"Purchase order amendment\",\"Additional charge receipt\"],\"requiredNextActions\":[\"Request the purchase order amendment\",\"Request the additional-charge receipt\",\"Clarify the goods-received shortfall\",\"Obtain human review and record a reasoned decision\"],\"suggestedVendorClarification\":\"Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.\",\"unresolvedDisagreements\":[],\"humanApprovalRequired\":true,\"paymentAuthorized\":false}",
+              "error": null,
+              "startedAt": "2026-11-07T04:25:48.502Z",
+              "completedAt": "2026-11-07T04:25:48.689Z",
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "45a1f04c-6f01-4e01-a49f-3cece3b6608b",
+              "timestamp": "2026-11-07T04:25:48.118Z",
+              "mode": "SIMULATED",
+              "actor": "RECON",
+              "kind": "delegation",
+              "title": "RECON task dispatched",
+              "summary": "RECON received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "478ef0ef-9346-49fd-8c45-0cebc6528277",
+              "timestamp": "2026-11-07T04:25:48.305Z",
+              "mode": "SIMULATED",
+              "actor": "RECON",
+              "kind": "simulated",
+              "title": "RECON stage complete",
+              "summary": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "f76296b8-087a-4c10-946f-0a965d415cf0",
+              "timestamp": "2026-11-07T04:25:48.310Z",
+              "mode": "SIMULATED",
+              "actor": "AUDITOR",
+              "kind": "delegation",
+              "title": "AUDITOR task dispatched",
+              "summary": "AUDITOR received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "97fd377c-05c4-4719-81a4-bb2463cfe6d9",
+              "timestamp": "2026-11-07T04:25:48.497Z",
+              "mode": "SIMULATED",
+              "actor": "AUDITOR",
+              "kind": "simulated",
+              "title": "AUDITOR stage complete",
+              "summary": "RECON arithmetic and evidence references independently verified against source case data.",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "47156797-6db1-44ae-a47a-78e8fef37f6f",
+              "timestamp": "2026-11-07T04:25:48.504Z",
+              "mode": "SIMULATED",
+              "actor": "RESOLVER",
+              "kind": "delegation",
+              "title": "RESOLVER task dispatched",
+              "summary": "RESOLVER received its assigned investigation stage.",
+              "source": "simulated"
+            },
+            {
+              "id": "b0c521d0-7157-4431-958f-6463c4f5e314",
+              "timestamp": "2026-11-07T04:25:48.691Z",
+              "mode": "SIMULATED",
+              "actor": "RESOLVER",
+              "kind": "simulated",
+              "title": "RESOLVER stage complete",
+              "summary": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+              "body": null,
+              "source": "simulated"
+            },
+            {
+              "id": "a97f0e39-b109-4a5f-aa79-74422a721738",
+              "timestamp": "2026-11-07T04:25:48.697Z",
+              "mode": "SIMULATED",
+              "actor": "MATCHPOINT",
+              "kind": "backend_calculation",
+              "title": "Investigation package completed",
+              "summary": "All three agent stages completed. Human approval is still required; no payment action was taken."
+            }
+          ],
+          "error": null,
+          "recommendation": {
+            "executiveRecommendation": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+            "reason": "3750 invoice-to-PO variance; 3000 PO-to-receipt shortfall; 3750 unsupported additional charge already included in the invoice total. AUDITOR verified the reported arithmetic.",
+            "supportingFindings": [
+              {
+                "code": "INV_PO_VARIANCE",
+                "title": "Invoice exceeds purchase order",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "RECEIPT_SHORTFALL",
+                "title": "Goods received below purchase order",
+                "amount": 3000,
+                "evidence": [
+                  "goods-received-record",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "UNSUPPORTED_CHARGE",
+                "title": "Additional charge lacks support",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "additional-charge-receipt"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_1",
+                "title": "Purchase order amendment missing",
+                "amount": null,
+                "evidence": [
+                  "po-amendment"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_2",
+                "title": "Additional charge receipt missing",
+                "amount": null,
+                "evidence": [
+                  "additional-charge-receipt"
+                ]
+              }
+            ],
+            "outstandingEvidence": [
+              "Purchase order amendment",
+              "Additional charge receipt"
+            ],
+            "requiredNextActions": [
+              "Request the purchase order amendment",
+              "Request the additional-charge receipt",
+              "Clarify the goods-received shortfall",
+              "Obtain human review and record a reasoned decision"
+            ],
+            "suggestedVendorClarification": "Please provide the purchase order amendment authorizing the additional charge and its supporting receipt. Please also clarify the $3,000 difference between the purchase order total and the recorded goods-received value.",
+            "unresolvedDisagreements": [],
+            "humanApprovalRequired": true,
+            "paymentAuthorized": false
+          },
+          "calculations": {
+            "runNumber": 1,
+            "currency": "USD",
+            "invoiceToPoVariance": 3750,
+            "invoiceToPoPercent": 8.33,
+            "receivedShortfall": 3000,
+            "receivedShortfallPercent": 6.67,
+            "unsupportedCharge": 3750,
+            "totalExposure": 3750,
+            "findings": [
+              {
+                "code": "INV_PO_VARIANCE",
+                "title": "Invoice exceeds purchase order",
+                "detail": "INV-2026-1048 totals $48,750, which is $3,750 above PO-2026-089.",
+                "severity": "High",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "RECEIPT_SHORTFALL",
+                "title": "Goods received below purchase order",
+                "detail": "Recorded received value is $42,000, $3,000 below the PO total.",
+                "severity": "High",
+                "amount": 3000,
+                "evidence": [
+                  "goods-received-record",
+                  "purchase-order"
+                ]
+              },
+              {
+                "code": "UNSUPPORTED_CHARGE",
+                "title": "Additional charge lacks support",
+                "detail": "A $3,750 additional charge is included in the invoice total. No supporting receipt was provided.",
+                "severity": "High",
+                "amount": 3750,
+                "evidence": [
+                  "invoice",
+                  "additional-charge-receipt"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_1",
+                "title": "Purchase order amendment missing",
+                "detail": "Purchase order amendment was listed as required but was not provided in the case file.",
+                "severity": "Needs evidence",
+                "amount": null,
+                "evidence": [
+                  "po-amendment"
+                ]
+              },
+              {
+                "code": "MISSING_EVIDENCE_2",
+                "title": "Additional charge receipt missing",
+                "detail": "Additional charge receipt was listed as required but was not provided in the case file.",
+                "severity": "Needs evidence",
+                "amount": null,
+                "evidence": [
+                  "additional-charge-receipt"
+                ]
+              }
+            ],
+            "facts": [
+              "Invoice total: $48,750.",
+              "PO total: $45,000.",
+              "Goods-received value: $42,000.",
+              "Additional charge: $3,750 included in invoice total."
+            ],
+            "assumptions": [
+              "No tax, line-item, quantity, delivery-date or amendment values were supplied; none are inferred."
+            ],
+            "unresolvedQuestions": [
+              "Can the vendor provide the PO amendment authorizing the additional charge?",
+              "Can the vendor provide a receipt for the $3,750 additional charge?",
+              "Can the receiving team explain the $3,000 difference between PO and received value?"
+            ],
+            "recommendation": "Hold the invoice for human review pending the missing PO amendment and additional-charge receipt, and clarify the goods-received shortfall. This is a recommendation only; it does not authorize or execute payment."
+          },
+          "humanDecision": {
+            "action": "Request further investigation",
+            "reason": "Further investigation is required before approving invoice INV-2026-1048. The invoice total is $48,750, while the purchase order PO-2026-089 authorizes $45,000. The invoice includes an additional $3,750 charge for which no approved PO amendment or supporting documentation has been provided. Additionally, the goods receipt records only $42,000 against the $45,000 purchase order.\n\nPlease obtain:\n1. An approved PO amendment or written authorization for the additional $3,750 charge.\n2. Supplier documentation explaining the additional charge.\n3. Delivery receipts or goods-received confirmation for the outstanding $3,000.\n\nKeep the invoice on hold until the discrepancies are verified and a human reviewer approves the resolution. Do not count the additional charge twice.",
+            "actor": "Morgan Patel",
+            "timestamp": "2026-11-07T05:31:17.727Z"
+          }
+        },
+        {
+          "id": "48aaca93-ecf9-4772-8add-075158162026",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "incomplete",
+          "startedAt": "2026-11-07T05:31:25.828Z",
+          "completedAt": "2026-11-07T05:31:25.861Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "c887cddb-1f81-4b61-ab66-18225d2de421",
+              "timestamp": "2026-11-07T05:31:25.863Z",
+              "mode": "SWITCH",
+              "actor": "MATCHPOINT",
+              "kind": "error",
+              "title": "Investigation incomplete",
+              "summary": "Switch returned an error (400).",
+              "source": "switch"
+            }
+          ],
+          "error": "Switch returned an error (400).",
+          "recommendation": null
+        },
+        {
+          "id": "2c265b6d-daea-4e42-8c93-7ce114fb8bf4",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "incomplete",
+          "startedAt": "2026-11-07T05:31:27.767Z",
+          "completedAt": "2026-11-07T05:31:27.791Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "9a8b58c4-6bfb-46c0-a5f5-f7979268f3f5",
+              "timestamp": "2026-11-07T05:31:27.793Z",
+              "mode": "SWITCH",
+              "actor": "MATCHPOINT",
+              "kind": "error",
+              "title": "Investigation incomplete",
+              "summary": "Switch returned an error (400).",
+              "source": "switch"
+            }
+          ],
+          "error": "Switch returned an error (400).",
+          "recommendation": null
+        },
+        {
+          "id": "eb9affb8-b317-4224-a221-a8ff05c520c9",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "incomplete",
+          "startedAt": "2026-11-07T05:31:27.984Z",
+          "completedAt": "2026-11-07T05:31:28.047Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "76e224eb-1d9a-495d-87da-94d0c364387c",
+              "timestamp": "2026-11-07T05:31:28.052Z",
+              "mode": "SWITCH",
+              "actor": "MATCHPOINT",
+              "kind": "error",
+              "title": "Investigation incomplete",
+              "summary": "Switch returned an error (400).",
+              "source": "switch"
+            }
+          ],
+          "error": "Switch returned an error (400).",
+          "recommendation": null
+        },
+        {
+          "id": "32c6a0a8-2f49-46b1-bf69-72e22e2114d0",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "incomplete",
+          "startedAt": "2026-11-07T05:31:29.128Z",
+          "completedAt": "2026-11-07T05:31:29.153Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "16774313-8584-4f64-99b2-42b3e0654f8e",
+              "timestamp": "2026-11-07T05:31:29.154Z",
+              "mode": "SWITCH",
+              "actor": "MATCHPOINT",
+              "kind": "error",
+              "title": "Investigation incomplete",
+              "summary": "Switch returned an error (400).",
+              "source": "switch"
+            }
+          ],
+          "error": "Switch returned an error (400).",
+          "recommendation": null
+        },
+        {
+          "id": "c5cb757d-32ae-499e-a48b-67cf67fb97f6",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "incomplete",
+          "startedAt": "2026-11-07T05:31:45.737Z",
+          "completedAt": "2026-11-07T05:31:45.769Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "1a9b28b9-7035-49fd-a746-8df66ccfc7db",
+              "timestamp": "2026-11-07T05:31:45.770Z",
+              "mode": "SWITCH",
+              "actor": "MATCHPOINT",
+              "kind": "error",
+              "title": "Investigation incomplete",
+              "summary": "Switch returned an error (400).",
+              "source": "switch"
+            }
+          ],
+          "error": "Switch returned an error (400).",
+          "recommendation": null
+        },
+        {
+          "id": "8bbfe6c3-d234-4091-8515-68ac893f3643",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "incomplete",
+          "startedAt": "2026-11-07T05:31:47.733Z",
+          "completedAt": "2026-11-07T05:31:47.758Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "ae0a5d53-7368-449c-b04f-d38473ec42a7",
+              "timestamp": "2026-11-07T05:31:47.759Z",
+              "mode": "SWITCH",
+              "actor": "MATCHPOINT",
+              "kind": "error",
+              "title": "Investigation incomplete",
+              "summary": "Switch returned an error (400).",
+              "source": "switch"
+            }
+          ],
+          "error": "Switch returned an error (400).",
+          "recommendation": null
+        },
+        {
+          "id": "f55106cf-908f-4dda-b372-2af86f9086f6",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "incomplete",
+          "startedAt": "2026-11-07T05:42:07.358Z",
+          "completedAt": "2026-11-07T05:42:07.523Z",
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "1c0cabf9-e972-42ab-afa3-36f38069e201",
+              "timestamp": "2026-11-07T05:42:07.525Z",
+              "mode": "SWITCH",
+              "actor": "MATCHPOINT",
+              "kind": "error",
+              "title": "Investigation incomplete",
+              "summary": "Switch did not confirm live delivery to recon (awaiting_manual_poll).",
+              "source": "switch"
+            }
+          ],
+          "error": "Switch did not confirm live delivery to recon (awaiting_manual_poll).",
+          "recommendation": null
+        },
+        {
+          "id": "f10b2ef7-86ec-4020-9930-884c4b56532c",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "running",
+          "startedAt": "2026-11-07T06:04:50.184Z",
+          "completedAt": null,
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "8b6130bf-0ea5-4399-b545-bc26bdffc53d",
+              "timestamp": "2026-11-07T06:04:50.293Z",
+              "mode": "SWITCH",
+              "actor": "resolver",
+              "kind": "switch",
+              "title": "Task addressed to RECON",
+              "summary": "Switch queued the CASE task for RECON to retrieve.",
+              "body": "sw_157e3dfe51134e84988ccd0e4d5fab6c",
+              "switchMessageId": "sw_157e3dfe51134e84988ccd0e4d5fab6c",
+              "threadId": "sw_157e3dfe51134e84988ccd0e4d5fab6c",
+              "source": "switch"
+            }
+          ],
+          "error": null,
+          "recommendation": null
+        },
+        {
+          "id": "93482bf7-aa88-45e9-86b9-307ae098853b",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "0f0f26b3-6d7b-4cd1-8085-bfdd5af138bd",
+          "status": "running",
+          "startedAt": "2026-11-07T06:25:13.238Z",
+          "completedAt": null,
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "15094296-2796-433b-b0e3-584df7a49f56",
+              "timestamp": "2026-11-07T06:25:13.366Z",
+              "mode": "SWITCH",
+              "actor": "resolver",
+              "kind": "switch",
+              "title": "Task addressed to RECON",
+              "summary": "Switch queued the CASE task for RECON to retrieve.",
+              "body": "sw_ca5da4270ac34f7a94ff2f4349934b72",
+              "switchMessageId": "sw_ca5da4270ac34f7a94ff2f4349934b72",
+              "threadId": "sw_ca5da4270ac34f7a94ff2f4349934b72",
+              "source": "switch"
+            }
+          ],
+          "error": null,
+          "recommendation": null
+        },
+        {
+          "id": "f9cd0e47-7c9f-4792-9c32-e8df459ad0af",
+          "caseId": "CASE-001",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "85741fb5-72f9-47ce-8f39-3e25783c5be1",
+          "status": "running",
+          "startedAt": "2026-11-07T14:14:07.696Z",
+          "completedAt": null,
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "aeb2b2b4-9573-485a-9411-ac37ef17222d",
+              "timestamp": "2026-11-07T14:14:08.179Z",
+              "mode": "SWITCH",
+              "actor": "resolver",
+              "kind": "switch",
+              "title": "Task addressed to RECON",
+              "summary": "Switch queued the CASE task for RECON to retrieve.",
+              "body": "sw_4387a6c57dd543d8928a86867d720afb",
+              "switchMessageId": "sw_4387a6c57dd543d8928a86867d720afb",
+              "threadId": "sw_4387a6c57dd543d8928a86867d720afb",
+              "source": "switch"
+            }
+          ],
+          "error": null,
+          "recommendation": null
+        }
+      ]
+    },
+    {
+      "vendor": "Northstar Components",
+      "invoice": {
+        "number": "NS-INV-84219",
+        "total": 64800,
+        "additionalCharge": {
+          "label": "Expedite fee",
+          "amount": 2800
+        }
+      },
+      "purchaseOrder": {
+        "number": "NS-PO-2026-184",
+        "total": 62000
+      },
+      "goodsReceived": {
+        "total": 62000
+      },
+      "evidence": [
+        {
+          "id": "invoice",
+          "name": "Invoice NS-INV-84219",
+          "type": "Vendor invoice",
+          "source": "Test case record",
+          "status": "Verified",
+          "extractedValues": "Total $64,800 including a $2,800 expedite fee",
+          "relatedFinding": "Unsupported expedite fee"
+        },
+        {
+          "id": "purchase-order",
+          "name": "Purchase order NS-PO-2026-184",
+          "type": "Purchase order",
+          "source": "Test case record",
+          "status": "Verified",
+          "extractedValues": "Authorized total $62,000",
+          "relatedFinding": "Invoice variance"
+        },
+        {
+          "id": "goods-received-record",
+          "name": "Receiving confirmation",
+          "type": "Receiving record",
+          "source": "Test case record",
+          "status": "Verified",
+          "extractedValues": "All ordered goods received; $62,000",
+          "relatedFinding": "Receipt match"
+        },
+        {
+          "id": "ap-ledger",
+          "name": "Accounts payable remittance ledger",
+          "type": "Payment record",
+          "source": "Test case record",
+          "status": "Verified",
+          "extractedValues": "Invoice NS-INV-84219 paid previously under supplier account NS-104",
+          "relatedFinding": "Potential duplicate payment"
+        },
+        {
+          "id": "vendor-master",
+          "name": "Supplier master account confirmation",
+          "type": "Vendor master record",
+          "source": "Required control evidence",
+          "status": "Missing",
+          "extractedValues": null,
+          "relatedFinding": "Remittance account mismatch"
+        },
+        {
+          "id": "additional-charge-receipt",
+          "name": "Expedite authorization and receipt",
+          "type": "Charge support",
+          "source": "Required supporting document",
+          "status": "Missing",
+          "extractedValues": null,
+          "relatedFinding": "Unsupported expedite fee"
+        }
+      ],
+      "testCaseKey": "test-case-2",
+      "investigationContext": "A matching invoice reference appears in the accounts payable ledger as previously paid. The current invoice also includes an unsupported expedite fee, while the supplier remittance account differs from the approved vendor master.",
+      "id": "CASE-002",
+      "synthetic": true,
+      "status": "Needs review",
+      "createdAt": "2026-11-07T14:17:28.503Z",
+      "updatedAt": "2026-11-07T14:17:28.641Z",
       "decision": null,
-      "reconciliationRuns": 0
+      "reconciliationRuns": 0,
+      "investigations": [
+        {
+          "id": "e36bc2d2-609b-4727-b8b9-24df5dffa814",
+          "caseId": "CASE-002",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "85741fb5-72f9-47ce-8f39-3e25783c5be1",
+          "status": "running",
+          "startedAt": "2026-11-07T14:17:28.511Z",
+          "completedAt": null,
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "dda0ef29-1993-4659-8139-c02b29b6f43e",
+              "timestamp": "2026-11-07T14:17:28.637Z",
+              "mode": "SWITCH",
+              "actor": "resolver",
+              "kind": "switch",
+              "title": "Task addressed to RECON",
+              "summary": "Switch queued the CASE task for RECON to retrieve.",
+              "body": "sw_feb01732b27843f19b58170a5fd14105",
+              "switchMessageId": "sw_feb01732b27843f19b58170a5fd14105",
+              "threadId": "sw_feb01732b27843f19b58170a5fd14105",
+              "source": "switch"
+            }
+          ],
+          "error": null,
+          "recommendation": null
+        }
+      ]
+    },
+    {
+      "vendor": "Meridian Field Systems",
+      "invoice": {
+        "number": "MFS-2026-0317",
+        "total": 40000
+      },
+      "purchaseOrder": {
+        "number": "MFS-PO-77340",
+        "total": 40000
+      },
+      "goodsReceived": {
+        "total": 30000
+      },
+      "evidence": [
+        {
+          "id": "invoice",
+          "name": "Invoice MFS-2026-0317",
+          "type": "Vendor invoice",
+          "source": "Test case record",
+          "status": "Verified",
+          "extractedValues": "Invoice total $40,000",
+          "relatedFinding": "Partial delivery"
+        },
+        {
+          "id": "purchase-order",
+          "name": "Purchase order MFS-PO-77340",
+          "type": "Purchase order",
+          "source": "Test case record",
+          "status": "Verified",
+          "extractedValues": "Order total $40,000",
+          "relatedFinding": "Partial delivery"
+        },
+        {
+          "id": "goods-received-record",
+          "name": "Receiving report",
+          "type": "Receiving record",
+          "source": "Test case record",
+          "status": "Verified",
+          "extractedValues": "Accepted goods valued at $30,000; remaining $10,000 not received",
+          "relatedFinding": "Receipt shortfall"
+        },
+        {
+          "id": "supplier-credit-memo",
+          "name": "Supplier credit memo CM-77340-1",
+          "type": "Credit memo",
+          "source": "Test case record",
+          "status": "Verified",
+          "extractedValues": "Credit of $10,000 for undelivered goods; not applied to invoice",
+          "relatedFinding": "Credit not applied"
+        }
+      ],
+      "testCaseKey": "test-case-3",
+      "investigationContext": "The invoice matches the purchase order, but the receiving record covers only 75% of the order. A supplier credit memo for the undelivered balance is present but has not been applied to the invoice.",
+      "id": "CASE-003",
+      "synthetic": true,
+      "status": "Needs review",
+      "createdAt": "2026-11-07T14:20:49.076Z",
+      "updatedAt": "2026-11-07T14:20:49.225Z",
+      "decision": null,
+      "reconciliationRuns": 0,
+      "investigations": [
+        {
+          "id": "86a5ebc7-7fc1-4690-9853-cc2ed440bce9",
+          "caseId": "CASE-003",
+          "mode": "SWITCH",
+          "engine": "switch",
+          "roomId": "85741fb5-72f9-47ce-8f39-3e25783c5be1",
+          "status": "running",
+          "startedAt": "2026-11-07T14:20:49.081Z",
+          "completedAt": null,
+          "stages": {
+            "recon": {
+              "role": "RECON",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "auditor": {
+              "role": "AUDITOR",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            },
+            "resolver": {
+              "role": "RESOLVER",
+              "status": "waiting",
+              "output": null,
+              "rawOutput": null,
+              "error": null,
+              "startedAt": null,
+              "completedAt": null,
+              "eventId": null
+            }
+          },
+          "events": [
+            {
+              "id": "5c92b42d-794b-434b-b563-d79c78cf1e43",
+              "timestamp": "2026-11-07T14:20:49.209Z",
+              "mode": "SWITCH",
+              "actor": "resolver",
+              "kind": "switch",
+              "title": "Task addressed to RECON",
+              "summary": "Switch queued the CASE task for RECON to retrieve.",
+              "body": "sw_f7a7e2fa34244a79b08cd8f981b936c3",
+              "switchMessageId": "sw_f7a7e2fa34244a79b08cd8f981b936c3",
+              "threadId": "sw_f7a7e2fa34244a79b08cd8f981b936c3",
+              "source": "switch"
+            }
+          ],
+          "error": null,
+          "recommendation": null
+        }
+      ]
     }
   ],
   "activity": [
+    {
+      "actor": "resolver",
+      "summary": "Switch queued the CASE task for RECON to retrieve.",
+      "timestamp": "2026-11-07T14:20:49.209Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-003"
+    },
+    {
+      "actor": "resolver",
+      "summary": "Switch queued the CASE task for RECON to retrieve.",
+      "timestamp": "2026-11-07T14:17:28.637Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-002"
+    },
+    {
+      "actor": "resolver",
+      "summary": "Switch queued the CASE task for RECON to retrieve.",
+      "timestamp": "2026-11-07T14:14:08.179Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "resolver",
+      "summary": "Switch queued the CASE task for RECON to retrieve.",
+      "timestamp": "2026-11-07T06:25:13.366Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "resolver",
+      "summary": "Switch queued the CASE task for RECON to retrieve.",
+      "timestamp": "2026-11-07T06:04:50.293Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "Switch did not confirm live delivery to recon (awaiting_manual_poll).",
+      "timestamp": "2026-11-07T05:42:07.525Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "Switch returned an error (400).",
+      "timestamp": "2026-11-07T05:31:47.759Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "Switch returned an error (400).",
+      "timestamp": "2026-11-07T05:31:45.770Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "Switch returned an error (400).",
+      "timestamp": "2026-11-07T05:31:29.154Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "Switch returned an error (400).",
+      "timestamp": "2026-11-07T05:31:28.052Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "Switch returned an error (400).",
+      "timestamp": "2026-11-07T05:31:27.793Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "Switch returned an error (400).",
+      "timestamp": "2026-11-07T05:31:25.863Z",
+      "simulated": false,
+      "source": "switch",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "Morgan Patel",
+      "summary": "Recorded human decision: Request further investigation.",
+      "timestamp": "2026-11-07T05:31:17.727Z",
+      "simulated": false
+    },
+    {
+      "actor": "Morgan Patel",
+      "summary": "Recorded human decision: Request further investigation.",
+      "timestamp": "2026-11-07T05:31:08.071Z",
+      "simulated": false
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "All three agent stages completed. Human approval is still required; no payment action was taken.",
+      "timestamp": "2026-11-07T04:25:48.697Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RESOLVER",
+      "summary": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+      "timestamp": "2026-11-07T04:25:48.691Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RESOLVER",
+      "summary": "RESOLVER received its assigned investigation stage.",
+      "timestamp": "2026-11-07T04:25:48.504Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "AUDITOR",
+      "summary": "RECON arithmetic and evidence references independently verified against source case data.",
+      "timestamp": "2026-11-07T04:25:48.497Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "AUDITOR",
+      "summary": "AUDITOR received its assigned investigation stage.",
+      "timestamp": "2026-11-07T04:25:48.310Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RECON",
+      "summary": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+      "timestamp": "2026-11-07T04:25:48.305Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RECON",
+      "summary": "RECON received its assigned investigation stage.",
+      "timestamp": "2026-11-07T04:25:48.118Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "All three agent stages completed. Human approval is still required; no payment action was taken.",
+      "timestamp": "2026-11-07T04:25:46.471Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RESOLVER",
+      "summary": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+      "timestamp": "2026-11-07T04:25:46.466Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RESOLVER",
+      "summary": "RESOLVER received its assigned investigation stage.",
+      "timestamp": "2026-11-07T04:25:46.280Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "AUDITOR",
+      "summary": "RECON arithmetic and evidence references independently verified against source case data.",
+      "timestamp": "2026-11-07T04:25:46.275Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "AUDITOR",
+      "summary": "AUDITOR received its assigned investigation stage.",
+      "timestamp": "2026-11-07T04:25:46.088Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RECON",
+      "summary": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+      "timestamp": "2026-11-07T04:25:46.083Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RECON",
+      "summary": "RECON received its assigned investigation stage.",
+      "timestamp": "2026-11-07T04:25:45.896Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "MATCHPOINT",
+      "summary": "All three agent stages completed. Human approval is still required; no payment action was taken.",
+      "timestamp": "2026-11-06T18:29:53.312Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RESOLVER",
+      "summary": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+      "timestamp": "2026-11-06T18:29:53.307Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RESOLVER",
+      "summary": "RESOLVER received its assigned investigation stage.",
+      "timestamp": "2026-11-06T18:29:53.121Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "AUDITOR",
+      "summary": "RECON arithmetic and evidence references independently verified against source case data.",
+      "timestamp": "2026-11-06T18:29:53.116Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "AUDITOR",
+      "summary": "AUDITOR received its assigned investigation stage.",
+      "timestamp": "2026-11-06T18:29:52.930Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RECON",
+      "summary": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+      "timestamp": "2026-11-06T18:29:52.923Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
+    {
+      "actor": "RECON",
+      "summary": "RECON received its assigned investigation stage.",
+      "timestamp": "2026-11-06T18:29:52.737Z",
+      "simulated": true,
+      "source": "simulated",
+      "caseId": "CASE-001"
+    },
     {
       "actor": "RECON",
       "summary": "Flagged a $3,750 invoice-to-PO variance; charge is included in invoice total.",
@@ -134,6 +2617,289 @@
       "timestamp": "2026-11-04T09:30:00.000Z",
       "type": "agent",
       "simulated": true
+    },
+    {
+      "title": "RECON task dispatched",
+      "detail": "RECON received its assigned investigation stage.",
+      "actor": "RECON",
+      "timestamp": "2026-11-06T18:29:52.737Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "RECON stage complete",
+      "detail": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+      "actor": "RECON",
+      "timestamp": "2026-11-06T18:29:52.923Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "AUDITOR task dispatched",
+      "detail": "AUDITOR received its assigned investigation stage.",
+      "actor": "AUDITOR",
+      "timestamp": "2026-11-06T18:29:52.930Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "AUDITOR stage complete",
+      "detail": "RECON arithmetic and evidence references independently verified against source case data.",
+      "actor": "AUDITOR",
+      "timestamp": "2026-11-06T18:29:53.116Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "RESOLVER task dispatched",
+      "detail": "RESOLVER received its assigned investigation stage.",
+      "actor": "RESOLVER",
+      "timestamp": "2026-11-06T18:29:53.121Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "RESOLVER stage complete",
+      "detail": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+      "actor": "RESOLVER",
+      "timestamp": "2026-11-06T18:29:53.307Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "Investigation package completed",
+      "detail": "All three agent stages completed. Human approval is still required; no payment action was taken.",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-06T18:29:53.312Z",
+      "type": "backend_calculation",
+      "simulated": true
+    },
+    {
+      "title": "RECON task dispatched",
+      "detail": "RECON received its assigned investigation stage.",
+      "actor": "RECON",
+      "timestamp": "2026-11-07T04:25:45.896Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "RECON stage complete",
+      "detail": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+      "actor": "RECON",
+      "timestamp": "2026-11-07T04:25:46.083Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "AUDITOR task dispatched",
+      "detail": "AUDITOR received its assigned investigation stage.",
+      "actor": "AUDITOR",
+      "timestamp": "2026-11-07T04:25:46.088Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "AUDITOR stage complete",
+      "detail": "RECON arithmetic and evidence references independently verified against source case data.",
+      "actor": "AUDITOR",
+      "timestamp": "2026-11-07T04:25:46.275Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "RESOLVER task dispatched",
+      "detail": "RESOLVER received its assigned investigation stage.",
+      "actor": "RESOLVER",
+      "timestamp": "2026-11-07T04:25:46.280Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "RESOLVER stage complete",
+      "detail": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+      "actor": "RESOLVER",
+      "timestamp": "2026-11-07T04:25:46.466Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "Investigation package completed",
+      "detail": "All three agent stages completed. Human approval is still required; no payment action was taken.",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T04:25:46.471Z",
+      "type": "backend_calculation",
+      "simulated": true
+    },
+    {
+      "title": "RECON task dispatched",
+      "detail": "RECON received its assigned investigation stage.",
+      "actor": "RECON",
+      "timestamp": "2026-11-07T04:25:48.118Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "RECON stage complete",
+      "detail": "Invoice-to-PO variance 3750; PO-to-receipt shortfall 3000.",
+      "actor": "RECON",
+      "timestamp": "2026-11-07T04:25:48.305Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "AUDITOR task dispatched",
+      "detail": "AUDITOR received its assigned investigation stage.",
+      "actor": "AUDITOR",
+      "timestamp": "2026-11-07T04:25:48.310Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "AUDITOR stage complete",
+      "detail": "RECON arithmetic and evidence references independently verified against source case data.",
+      "actor": "AUDITOR",
+      "timestamp": "2026-11-07T04:25:48.497Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "RESOLVER task dispatched",
+      "detail": "RESOLVER received its assigned investigation stage.",
+      "actor": "RESOLVER",
+      "timestamp": "2026-11-07T04:25:48.504Z",
+      "type": "delegation",
+      "simulated": true
+    },
+    {
+      "title": "RESOLVER stage complete",
+      "detail": "HOLD FOR SUPPORTING EVIDENCE AND HUMAN REVIEW",
+      "actor": "RESOLVER",
+      "timestamp": "2026-11-07T04:25:48.691Z",
+      "type": "simulated",
+      "simulated": true
+    },
+    {
+      "title": "Investigation package completed",
+      "detail": "All three agent stages completed. Human approval is still required; no payment action was taken.",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T04:25:48.697Z",
+      "type": "backend_calculation",
+      "simulated": true
+    },
+    {
+      "title": "Human decision recorded",
+      "detail": "Request further investigation: Further investigation is required before approving invoice INV-2026-1048. The invoice total is $48,750, while the purchase order PO-2026-089 authorizes $45,000. The invoice includes an additional $3,750 charge for which no approved PO amendment or supporting documentation has been provided. Additionally, the goods receipt records only $42,000 against the $45,000 purchase order.\n\nPlease obtain:\n1. An approved PO amendment or written authorization for the additional $3,750 charge.\n2. Supplier documentation explaining the additional charge.\n3. Delivery receipts or goods-received confirmation for the outstanding $3,000.\n\nKeep the invoice on hold until the discrepancies are verified and a human reviewer approves the resolution. Do not count the additional charge twice.",
+      "actor": "Morgan Patel",
+      "timestamp": "2026-11-07T05:31:08.071Z",
+      "type": "decision",
+      "simulated": false
+    },
+    {
+      "title": "Human decision recorded",
+      "detail": "Request further investigation: Further investigation is required before approving invoice INV-2026-1048. The invoice total is $48,750, while the purchase order PO-2026-089 authorizes $45,000. The invoice includes an additional $3,750 charge for which no approved PO amendment or supporting documentation has been provided. Additionally, the goods receipt records only $42,000 against the $45,000 purchase order.\n\nPlease obtain:\n1. An approved PO amendment or written authorization for the additional $3,750 charge.\n2. Supplier documentation explaining the additional charge.\n3. Delivery receipts or goods-received confirmation for the outstanding $3,000.\n\nKeep the invoice on hold until the discrepancies are verified and a human reviewer approves the resolution. Do not count the additional charge twice.",
+      "actor": "Morgan Patel",
+      "timestamp": "2026-11-07T05:31:17.727Z",
+      "type": "decision",
+      "simulated": false
+    },
+    {
+      "title": "Investigation incomplete",
+      "detail": "Switch returned an error (400).",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T05:31:25.863Z",
+      "type": "error",
+      "simulated": false
+    },
+    {
+      "title": "Investigation incomplete",
+      "detail": "Switch returned an error (400).",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T05:31:27.793Z",
+      "type": "error",
+      "simulated": false
+    },
+    {
+      "title": "Investigation incomplete",
+      "detail": "Switch returned an error (400).",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T05:31:28.052Z",
+      "type": "error",
+      "simulated": false
+    },
+    {
+      "title": "Investigation incomplete",
+      "detail": "Switch returned an error (400).",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T05:31:29.154Z",
+      "type": "error",
+      "simulated": false
+    },
+    {
+      "title": "Investigation incomplete",
+      "detail": "Switch returned an error (400).",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T05:31:45.770Z",
+      "type": "error",
+      "simulated": false
+    },
+    {
+      "title": "Investigation incomplete",
+      "detail": "Switch returned an error (400).",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T05:31:47.759Z",
+      "type": "error",
+      "simulated": false
+    },
+    {
+      "title": "Investigation incomplete",
+      "detail": "Switch did not confirm live delivery to recon (awaiting_manual_poll).",
+      "actor": "MATCHPOINT",
+      "timestamp": "2026-11-07T05:42:07.525Z",
+      "type": "error",
+      "simulated": false
+    },
+    {
+      "title": "Task addressed to RECON",
+      "detail": "Switch queued the CASE task for RECON to retrieve.",
+      "actor": "resolver",
+      "timestamp": "2026-11-07T06:04:50.293Z",
+      "type": "switch",
+      "simulated": false
+    },
+    {
+      "title": "Task addressed to RECON",
+      "detail": "Switch queued the CASE task for RECON to retrieve.",
+      "actor": "resolver",
+      "timestamp": "2026-11-07T06:25:13.366Z",
+      "type": "switch",
+      "simulated": false
+    },
+    {
+      "title": "Task addressed to RECON",
+      "detail": "Switch queued the CASE task for RECON to retrieve.",
+      "actor": "resolver",
+      "timestamp": "2026-11-07T14:14:08.179Z",
+      "type": "switch",
+      "simulated": false,
+      "caseId": "CASE-001"
+    },
+    {
+      "title": "Task addressed to RECON",
+      "detail": "Switch queued the CASE task for RECON to retrieve.",
+      "actor": "resolver",
+      "timestamp": "2026-11-07T14:17:28.637Z",
+      "type": "switch",
+      "simulated": false,
+      "caseId": "CASE-002"
+    },
+    {
+      "title": "Task addressed to RECON",
+      "detail": "Switch queued the CASE task for RECON to retrieve.",
+      "actor": "resolver",
+      "timestamp": "2026-11-07T14:20:49.209Z",
+      "type": "switch",
+      "simulated": false,
+      "caseId": "CASE-003"
     }
   ]
 }

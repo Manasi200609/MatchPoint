@@ -3,6 +3,9 @@ import { reconcileCase } from '../reconciliation.js';
 import { MockSwitchAdapter } from '../switch/MockSwitchAdapter.js';
 import { SwitchAgentAdapter, SwitchAdapterError } from '../switch/SwitchAgentAdapter.js';
 import { auditRecon, buildAgentPrompt, buildMockWorkflow, resolveFindings, validateRoleOutput } from './agentWorkflow.js';
+import { GroqProvider } from './GroqProvider.js';
+import { ReasoningAgents } from './reasoningAgents.js';
+import { SwitchCollaboration } from '../switch/SwitchCollaboration.js';
 
 const roles = ['RECON', 'AUDITOR', 'RESOLVER'];
 const agentCards = [
@@ -13,11 +16,18 @@ const agentCards = [
 const errorForUi = error => error instanceof SwitchAdapterError ? error.message : error?.message || 'Investigation stage failed.';
 
 export class InvestigationService {
-  constructor(repository, { env = process.env, switchAdapter } = {}) {
+  constructor(repository, { env = process.env, switchAdapter, reasoningAgents, switchCollaboration } = {}) {
     this.repository = repository;
     const requestedMode = String(env.SWITCH_MODE || 'mock').toLowerCase();
     if (!['mock', 'live'].includes(requestedMode)) throw new Error('SWITCH_MODE must be either mock or live.');
     this.mode = requestedMode === 'live' ? 'LIVE' : 'SIMULATED';
+    const requestedEngine = String(env.INVESTIGATION_ENGINE || 'rules').toLowerCase();
+    if (!['rules', 'groq', 'switch'].includes(requestedEngine)) throw new Error('INVESTIGATION_ENGINE must be rules, groq, or switch.');
+    // Live transport is opt-in through SWITCH_MODE. The collaboration engine is
+    // also ignored in mock mode, so an engine setting alone cannot open sockets.
+    this.engine = requestedMode === 'live' ? (requestedEngine === 'switch' ? 'switch' : 'switch-legacy') : (requestedEngine === 'switch' ? 'rules' : requestedEngine);
+    if (requestedMode === 'live' && this.engine === 'switch') this.mode = 'SWITCH';
+    this.reasoningAgents = reasoningAgents || new ReasoningAgents({ provider: new GroqProvider({ apiKey: env.GROQ_API_KEY, model: env.GROQ_MODEL, baseUrl: env.GROQ_BASE_URL, timeoutMs: Number(env.GROQ_TIMEOUT_MS) || 45000 }) });
     this.agentTimeoutMs = Number(env.SWITCH_AGENT_TIMEOUT_MS) || 120000;
     this.mockSwitch = new MockSwitchAdapter();
     this.liveSwitch = switchAdapter || new SwitchAgentAdapter({
@@ -29,16 +39,36 @@ export class InvestigationService {
       agentNames: { recon: env.SWITCH_RECON_NAME || 'RECON', auditor: env.SWITCH_AUDITOR_NAME || 'AUDITOR', resolver: env.SWITCH_RESOLVER_NAME || 'RESOLVER' },
       timeoutMs: Number(env.SWITCH_REQUEST_TIMEOUT_MS) || 12000
     });
+    this.switchCollaboration = switchCollaboration || new SwitchCollaboration({ env, reasoningAgents: this.reasoningAgents });
     this.activeRuns = new Map();
     this.starting = new Map();
     this.statusCache = null;
     this.statusPending = null;
   }
 
-  get switch() { return this.mode === 'LIVE' ? this.liveSwitch : this.mockSwitch; }
+  get switch() { return this.mode === 'LIVE' ? this.liveSwitch : this.mode === 'SWITCH' ? this.switchCollaboration : this.mockSwitch; }
+
+  async start() {
+    if (this.mode === 'SWITCH') return this.switchCollaboration.startSessions();
+    return this.integrationStatus();
+  }
+
+  async reconnect() {
+    if (this.mode !== 'SWITCH') {
+      const error = new Error('Reconnect is available only when live Switch collaboration is configured.');
+      error.code = 'switch_not_configured';
+      throw error;
+    }
+    return this.switchCollaboration.reconnect();
+  }
+
+  async shutdown() {
+    if (this.switchCollaboration) await this.switchCollaboration.stopSessions();
+  }
 
   async integrationStatus() {
-    if (this.mode !== 'LIVE') return { mode: 'SIMULATED', connected: true, label: 'DEMO / SIMULATED', roomId: null };
+    if (this.mode === 'SIMULATED') return { mode: 'SIMULATED', connected: false, label: 'DEMO / SIMULATED', roomId: null, sessions: {} };
+    if (this.mode === 'SWITCH') return this.switchCollaboration.getStatus();
     if (this.statusCache && Date.now() - this.statusCache.at < 5000) return this.statusCache.value;
     if (this.statusPending) return this.statusPending;
     this.statusPending = this.liveSwitch.checkConnection().then(value => { this.statusCache = { at: Date.now(), value }; return value; }).finally(() => { this.statusPending = null; });
@@ -47,7 +77,7 @@ export class InvestigationService {
 
   async listCases() {
     const db = await this.repository.getWorkspace(), cases = db.cases, integrationStatus = await this.integrationStatus();
-    return { cases, agents: agentCards.map(a => ({ ...a, status: this.mode === 'LIVE' ? (integrationStatus.connected ? 'Room member' : 'Unverified') : 'SIMULATED' })), activity: db.activity, integrationStatus, updatedAt: cases.reduce((a,c)=>a>c.updatedAt?a:c.updatedAt,''), metrics: { active: cases.filter(c=>!['Resolved','Rejected'].includes(c.status)).length, review: cases.filter(c=>c.status==='Needs review').length, exposure: cases.filter(c=>!['Resolved','Rejected'].includes(c.status)).reduce((s,c)=>s+Math.max(0,c.invoice.total-c.purchaseOrder.total),0), resolved: cases.filter(c=>c.status==='Resolved').length } };
+    return { cases, agents: agentCards.map(a => ({ ...a, status: this.mode === 'SIMULATED' ? 'SIMULATED' : this.mode === 'SWITCH' ? integrationStatus.sessions?.[a.name]?.state || 'disconnected' : (integrationStatus.connected ? 'Room member' : 'Unverified') })), activity: db.activity, integrationStatus, updatedAt: cases.reduce((a,c)=>a>c.updatedAt?a:c.updatedAt,''), metrics: { active: cases.filter(c=>!['Resolved','Rejected'].includes(c.status)).length, review: cases.filter(c=>c.status==='Needs review').length, exposure: cases.filter(c=>!['Resolved','Rejected'].includes(c.status)).reduce((s,c)=>s+Math.max(0,c.invoice.total-c.purchaseOrder.total),0), resolved: cases.filter(c=>c.status==='Resolved').length } };
   }
 
   async getCase(id) {
@@ -56,7 +86,8 @@ export class InvestigationService {
     const investigations = c.investigations || [];
     const latest = investigations.at(-1) || null;
     const agents = agentCards.map(a => ({ ...a, status: latest?.stages?.[a.name.toLowerCase()]?.status || 'Waiting', finding: latest?.stages?.[a.name.toLowerCase()]?.output || null, evidence: [] }));
-    return { case: c, reconciliation: reconcileCase(c, c.reconciliationRuns || 1), evidence: c.evidence, activity: db.activity, timeline: db.timeline, agents, investigations, latestInvestigation: latest, integrationStatus: await this.integrationStatus(), executionMode: this.mode };
+    const belongsToCase = item => item.caseId === id || (!item.caseId && id === 'CASE-001');
+    return { case: c, reconciliation: reconcileCase(c, c.reconciliationRuns || 1), evidence: c.evidence, activity: db.activity.filter(belongsToCase), timeline: db.timeline.filter(belongsToCase), agents, investigations, latestInvestigation: latest, integrationStatus: await this.integrationStatus(), executionMode: this.mode };
   }
 
   async getInvestigation(id, investigationId) {
@@ -72,7 +103,7 @@ export class InvestigationService {
     const creation = (async () => {
       const c = await this.repository.get(id); if (!c) return null;
       const now = new Date().toISOString();
-      const run = { id: randomUUID(), caseId: id, mode: this.mode, roomId: this.mode === 'LIVE' ? this.liveSwitch.roomId : null, status: 'running', startedAt: now, completedAt: null, stages: Object.fromEntries(roles.map(role => [role.toLowerCase(), { role, status: 'waiting', output: null, rawOutput: null, error: null, startedAt: null, completedAt: null, eventId: null }])), events: [], error: null, recommendation: null };
+      const run = { id: randomUUID(), caseId: id, mode: this.mode, engine: this.engine, roomId: this.mode === 'LIVE' ? this.liveSwitch.roomId : this.mode === 'SWITCH' ? this.switchCollaboration.roomId : null, status: 'running', startedAt: now, completedAt: null, stages: Object.fromEntries(roles.map(role => [role.toLowerCase(), { role, status: 'waiting', output: null, rawOutput: null, error: null, startedAt: null, completedAt: null, eventId: null }])), events: [], error: null, recommendation: null };
       await this.repository.update(id, current => ({ ...current, investigations: [...(current.investigations || []), run], updatedAt: now }));
       this.activeRuns.set(id, run.id);
       const work = this.executeRun(id, run.id);
@@ -101,8 +132,9 @@ export class InvestigationService {
   async event(caseId, investigationId, item) {
     const event = { id: randomUUID(), timestamp: new Date().toISOString(), mode: this.mode, ...item };
     await this.patchRun(caseId, investigationId, run => ({ ...run, events: [...run.events, event] }));
-    await this.repository.addTimeline({ title: item.title || `${item.actor} update`, detail: item.summary || item.body || '', actor: item.actor || 'System', timestamp: event.timestamp, type: item.kind || (this.mode === 'LIVE' ? 'switch' : 'simulated'), simulated: this.mode !== 'LIVE' });
-    await this.repository.addActivity({ actor: item.actor || 'System', summary: item.summary || item.body || '', timestamp: event.timestamp, simulated: this.mode !== 'LIVE', source: this.mode === 'LIVE' ? 'switch' : 'simulated', caseId });
+    const isSwitch = this.mode === 'LIVE' || this.mode === 'SWITCH';
+    await this.repository.addTimeline({ title: item.title || `${item.actor} update`, detail: item.summary || item.body || '', actor: item.actor || 'System', timestamp: event.timestamp, type: item.kind || (isSwitch ? 'switch' : 'simulated'), simulated: !isSwitch, caseId });
+    await this.repository.addActivity({ actor: item.actor || 'System', summary: item.summary || item.body || '', timestamp: event.timestamp, simulated: !isSwitch, source: isSwitch ? 'switch' : 'simulated', caseId });
     return event;
   }
 
@@ -124,7 +156,19 @@ export class InvestigationService {
       }
 
       let recon, auditor, resolver;
-      for (const role of roles) {
+      if (this.engine === 'switch') {
+        const result = await this.switchCollaboration.execute({
+          runId: investigationId,
+          caseRecord,
+          calculations,
+          onStage: (role, changes) => this.setStage(caseId, investigationId, role, changes),
+          onEvent: item => this.event(caseId, investigationId, item)
+        });
+        recon = result.recon;
+        auditor = result.auditor;
+        resolver = result.resolver;
+        await this.patchRun(caseId, investigationId, run => ({ ...run, switchThreadId: result.threadId }));
+      } else for (const role of roles) {
         await this.setStage(caseId, investigationId, role, { status: 'working', startedAt: new Date().toISOString() });
         await this.event(caseId, investigationId, { actor: role, kind: 'delegation', title: `${role} task dispatched`, summary: `${role} received its assigned investigation stage.`, source: this.mode === 'LIVE' ? 'switch' : 'simulated' });
         let output, rawOutput = null, eventId = null;
@@ -148,7 +192,18 @@ export class InvestigationService {
           // Explicitly deterministic demo behavior: values are derived from this case and the reconciliation service.
           const demo = buildMockWorkflow(caseRecord);
           output = role === 'RECON' ? demo.recon : role === 'AUDITOR' ? demo.auditor : demo.resolver;
-          rawOutput = JSON.stringify(output);
+          if (this.engine === 'groq') {
+            const model = await this.reasoningAgents.run(role, { taskId: `${investigationId}:${role}`, caseRecord, recon, auditor });
+            output = { ...output, modelFindings: model.findings, modelEvidence: model.evidence, modelCalculations: model.calculations, modelUnresolvedQuestions: model.unresolved_questions, modelRecommendation: model.recommendation, reasoningSummary: model.reasoning_summary };
+            if (role === 'RESOLVER') {
+              // The model may add analysis, but deterministic policy gates remain authoritative.
+              output.humanApprovalRequired = true;
+              output.paymentAuthorized = false;
+            }
+            rawOutput = JSON.stringify({ deterministic: role === 'RECON' ? demo.recon : role === 'AUDITOR' ? demo.auditor : demo.resolver, groq: model });
+          } else {
+            rawOutput = JSON.stringify(output);
+          }
           await new Promise(resolve => setTimeout(resolve, 180));
         }
 
@@ -158,7 +213,7 @@ export class InvestigationService {
         const status = role === 'AUDITOR' && output.verificationStatus === 'CHALLENGED' ? 'challenged' : 'complete';
         await this.setStage(caseId, investigationId, role, { status, output, rawOutput, eventId, completedAt: new Date().toISOString() });
         const summary = role === 'RECON' ? `Invoice-to-PO variance ${calculations.invoiceToPoVariance}; PO-to-receipt shortfall ${calculations.receivedShortfall}.` : role === 'AUDITOR' ? output.auditConclusion || output.verificationStatus : output.executiveRecommendation;
-        await this.event(caseId, investigationId, { actor: role, kind: live ? 'switch' : 'simulated', title: `${role} stage ${status}`, summary, body: live ? rawOutput : null, source: live ? 'switch' : 'simulated' });
+        await this.event(caseId, investigationId, { actor: role, kind: live ? 'switch' : this.engine === 'groq' ? 'groq' : 'simulated', title: `${role} stage ${status}`, summary, body: live || this.engine === 'groq' ? rawOutput : null, source: live ? 'switch' : this.engine === 'groq' ? 'groq' : 'simulated' });
       }
       if (resolver.humanApprovalRequired !== true || resolver.paymentAuthorized === true) throw new Error('RESOLVER response did not preserve the mandatory human approval gate.');
       const deterministicResolution = resolveFindings(caseRecord, recon, auditor, calculations);
@@ -174,7 +229,7 @@ export class InvestigationService {
         if (current) stages[current.role.toLowerCase()] = { ...current, status: 'failed', error: safe, completedAt: new Date().toISOString() };
         return { ...run, stages, status: 'incomplete', completedAt: new Date().toISOString(), error: safe };
       });
-      await this.event(caseId, investigationId, { actor: 'MATCHPOINT', kind: 'error', title: 'Investigation incomplete', summary: safe, source: this.mode === 'LIVE' ? 'switch' : 'simulated' });
+      await this.event(caseId, investigationId, { actor: 'MATCHPOINT', kind: 'error', title: 'Investigation incomplete', summary: safe, source: this.mode === 'SIMULATED' ? 'simulated' : 'switch' });
       return this.getInvestigation(caseId, investigationId);
     }
   }
@@ -182,7 +237,7 @@ export class InvestigationService {
   async runReconciliation(id) {
     const c = await this.repository.update(id, x => ({ ...x, reconciliationRuns: (x.reconciliationRuns || 0) + 1, updatedAt: new Date().toISOString() }));
     if (!c) return null;
-    await this.repository.addTimeline({ title: 'Deterministic reconciliation rerun', detail: 'Invoice, PO and received-goods comparisons recalculated by local deterministic service.', actor: 'System', timestamp: c.updatedAt, type: 'backend_calculation', simulated: false });
+    await this.repository.addTimeline({ title: 'Deterministic reconciliation rerun', detail: 'Invoice, PO and received-goods comparisons recalculated by local deterministic service.', actor: 'System', timestamp: c.updatedAt, type: 'backend_calculation', simulated: false, caseId: id });
     return this.getCase(id);
   }
 
@@ -197,10 +252,10 @@ export class InvestigationService {
       return { ...x, investigations, decision, status: action === 'Approve recommendation' ? 'Resolved' : action === 'Reject recommendation' ? 'Needs review' : 'Investigating', updatedAt: decision.timestamp };
     });
     if (!c) return null;
-    await this.repository.addTimeline({ title: 'Human decision recorded', detail: `${action}: ${reason.trim()}`, actor: decision.actor, timestamp: decision.timestamp, type: 'decision', simulated: false });
-    await this.repository.addActivity({ actor: decision.actor, summary: `Recorded human decision: ${action}.`, timestamp: decision.timestamp, simulated: false });
+    await this.repository.addTimeline({ title: 'Human decision recorded', detail: `${action}: ${reason.trim()}`, actor: decision.actor, timestamp: decision.timestamp, type: 'decision', simulated: false, caseId: id });
+    await this.repository.addActivity({ actor: decision.actor, summary: `Recorded human decision: ${action}.`, timestamp: decision.timestamp, simulated: false, caseId: id });
     return c;
   }
 
-  async createCase(data) { const db=await this.repository.getWorkspace(); const id=`CASE-${String(db.cases.length+1).padStart(3,'0')}`; const c={...data,id,synthetic:false,status:'Needs review',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),decision:null,reconciliationRuns:0,investigations:[]}; return this.repository.create(c); }
+  async createCase(data) { const db=await this.repository.getWorkspace(); const id=`CASE-${String(db.cases.length+1).padStart(3,'0')}`; const c={...data,id,synthetic:Boolean(data.testCaseKey),status:'Needs review',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),decision:null,reconciliationRuns:0,investigations:[]}; return this.repository.create(c); }
 }

@@ -17,6 +17,7 @@ export class SwitchAgentAdapter {
     this.connectionId = connectionId || '';
     this.roomId = roomId || '';
     this.agentNames = agentNames || {};
+    this.agentIdentities = {};
     this.timeoutMs = timeoutMs;
     this.fetch = fetchImpl;
   }
@@ -58,9 +59,10 @@ export class SwitchAgentAdapter {
       const participants = await this.operation('list_participants');
       if (!Array.isArray(participants)) throw new SwitchAdapterError('invalid_response', 'Switch list_participants returned an unexpected response.');
       const agents = participants.filter(p => p?.type === 'agent');
-      const names = new Set(agents.map(p => String(p.name || '').toLowerCase()));
-      const missing = Object.values(this.agentNames).filter(name => !names.has(String(name).toLowerCase()));
+      const byName = new Map(agents.map(p => [String(p.name || '').toLowerCase(), p]));
+      const missing = Object.values(this.agentNames).filter(name => !byName.has(String(name).toLowerCase()));
       if (missing.length) throw new SwitchAdapterError('agents_missing', `Required agents are not members of the configured room: ${missing.join(', ')}.`);
+      this.agentIdentities = Object.fromEntries(Object.entries(this.agentNames).map(([role, name]) => [role, { name, id: byName.get(String(name).toLowerCase())?.id || null }]));
       return { connected: true, mode: 'LIVE', roomId: this.roomId, roomName: room?.name || null, agents };
     } catch (error) {
       return { connected: false, mode: 'LIVE', roomId: this.roomId, error: error instanceof SwitchAdapterError ? error.message : 'Switch connection check failed.' };
@@ -87,16 +89,18 @@ export class SwitchAgentAdapter {
     return context.threads.flatMap(thread => {
       if (!thread?.root || !Array.isArray(thread.replies)) throw new SwitchAdapterError('invalid_response', 'Switch read_context returned a malformed thread.');
       const threadId = thread.root.id;
-      return [thread.root, ...thread.replies].map(message => ({ id: message.id, sender: message.sender_name, body: message.body, timestamp: message.timestamp, timestampMs: typeof message.timestamp === 'number' ? message.timestamp : Date.parse(message.timestamp), kind: message.kind || 'message', source: 'switch', threadId }));
+      return [thread.root, ...thread.replies].map(message => ({ id: message.id, sender: message.sender_name, senderId: message.sender, body: message.body, timestamp: message.timestamp, timestampMs: typeof message.timestamp === 'number' ? message.timestamp : Date.parse(message.timestamp), kind: message.kind || 'message', source: 'switch', threadId }));
     }).filter(message => typeof message.id === 'string' && typeof message.sender === 'string' && typeof message.body === 'string' && Number.isFinite(message.timestampMs));
   }
 
   async waitForAgentReply({ role, after, threadId, timeoutMs = 120000, pollMs = 1500 }) {
-    const expected = this.agentNames[role.toLowerCase()].toLowerCase();
+    const roleKey = role.toLowerCase();
+    const expected = this.agentNames[roleKey].toLowerCase();
+    const expectedId = this.agentIdentities[roleKey]?.id;
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
       const messages = await this.readUpdates({ since: after });
-      const found = messages.find(message => message.kind === 'message' && String(message.sender || '').toLowerCase() === expected && message.timestampMs >= after && (!threadId || message.threadId === threadId) && message.id !== threadId);
+      const found = messages.find(message => message.kind === 'message' && (expectedId ? String(message.senderId || message.sender).toLowerCase() === String(expectedId).toLowerCase() : String(message.sender || '').toLowerCase() === expected) && message.timestampMs >= after && (!threadId || message.threadId === threadId) && message.id !== threadId);
       if (found) return found;
       await new Promise(resolve => setTimeout(resolve, Math.min(pollMs, Math.max(0, deadline - Date.now()))));
     }

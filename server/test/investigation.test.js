@@ -4,7 +4,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { JsonCaseRepository, seed } from '../src/repository/JsonCaseRepository.js';
 import { InvestigationService } from '../src/services/InvestigationService.js';
-import { auditRecon, buildMockWorkflow, resolveFindings } from '../src/services/agentWorkflow.js';
+import { auditRecon, buildAgentPrompt, buildMockWorkflow, resolveFindings } from '../src/services/agentWorkflow.js';
 import { SwitchAgentAdapter } from '../src/switch/SwitchAgentAdapter.js';
 
 class MemoryRepository {
@@ -25,6 +25,42 @@ test('mock workflow executes and records RECON, AUDITOR, RESOLVER in sequence', 
   assert.equal(saved.status, 'completed');
   assert.deepEqual(saved.events.filter(e=>e.kind==='delegation').map(e=>e.actor), ['RECON','AUDITOR','RESOLVER']);
   assert.equal(saved.mode, 'SIMULATED');
+  assert.equal(saved.recommendation.humanApprovalRequired, true);
+  assert.equal(saved.recommendation.paymentAuthorized, false);
+});
+
+test('test-case fixtures remain marked separately and their context reaches agent prompts', async () => {
+  const repository = new MemoryRepository();
+  const service = new InvestigationService(repository, { env: { SWITCH_MODE: 'mock' } });
+  const scenarioContext = 'Verify the supplier credit memo against the partial receipt.';
+  const fixture = await service.createCase({
+    ...seed().cases[0],
+    testCaseKey: 'test-case-3',
+    investigationContext: scenarioContext
+  });
+  assert.equal(fixture.synthetic, true);
+  assert.equal(fixture.testCaseKey, 'test-case-3');
+  const prompt = buildAgentPrompt('RECON', fixture, { calculations: {}, recon: {}, auditor: {} });
+  assert.match(prompt, /scenarioContext/);
+  assert.match(prompt, /Verify the supplier credit memo against the partial receipt/);
+  assert.ok((await service.listCases()).cases.some(item => item.id === fixture.id && item.synthetic));
+});
+
+test('opt-in Groq engine runs ordered role analyses and retains deterministic approval gates', async () => {
+  const repository = new MemoryRepository(), calls = [];
+  const reasoningAgents = { run: async (role, context) => {
+    calls.push({ role, context });
+    return { agent: role, findings: [`${role} model note`], evidence: [], calculations: [], unresolved_questions: [], recommendation: 'Hold', reasoning_summary: `${role} checked the supplied case.` };
+  } };
+  const service = new InvestigationService(repository, { env: { SWITCH_MODE: 'mock', INVESTIGATION_ENGINE: 'groq' }, reasoningAgents });
+  const run = await service.startInvestigation('CASE-001'); await service.waitForRun(run.id);
+  const saved = await service.getInvestigation('CASE-001', run.id);
+  assert.equal(saved.status, 'completed', saved.error || 'Groq engine did not complete');
+  assert.equal(saved.engine, 'groq');
+  assert.deepEqual(calls.map(call => call.role), ['RECON', 'AUDITOR', 'RESOLVER']);
+  assert.ok(calls[1].context.recon);
+  assert.ok(calls[2].context.recon && calls[2].context.auditor);
+  assert.equal(saved.stages.recon.output.modelFindings[0], 'RECON model note');
   assert.equal(saved.recommendation.humanApprovalRequired, true);
   assert.equal(saved.recommendation.paymentAuthorized, false);
 });
@@ -76,9 +112,34 @@ test('human decisions require a reason', async () => {
 
 test('mock mode and its generated events are explicitly simulated', async () => {
   const service=new InvestigationService(new MemoryRepository(),{env:{SWITCH_MODE:'mock'}});
-  assert.deepEqual(await service.integrationStatus(),{mode:'SIMULATED',connected:true,label:'DEMO / SIMULATED',roomId:null});
+  assert.deepEqual(await service.integrationStatus(),{mode:'SIMULATED',connected:false,label:'DEMO / SIMULATED',roomId:null,sessions:{}});
   const run=await service.startInvestigation('CASE-001'); await service.waitForRun(run.id);
   assert.ok((await service.getInvestigation('CASE-001',run.id)).events.every(e=>e.mode==='SIMULATED'));
+});
+
+test('mock mode ignores switch engine selection and never starts collaboration sessions', async () => {
+  let groqCalls = 0;
+  const service = new InvestigationService(new MemoryRepository(), { env: { SWITCH_MODE: 'mock', INVESTIGATION_ENGINE: 'switch', SWITCH_API_URL: 'https://switch.example', SWITCH_ROOM_ID: 'room', SWITCH_RECON_ID: 'r', SWITCH_RECON_API_KEY: 'x', SWITCH_AUDITOR_ID: 'a', SWITCH_AUDITOR_API_KEY: 'x', SWITCH_RESOLVER_ID: 'z', SWITCH_RESOLVER_API_KEY: 'x' }, reasoningAgents: { run: async () => { groqCalls++; throw new Error('must not call Groq'); } } });
+  assert.equal(service.mode, 'SIMULATED');
+  assert.equal(service.engine, 'rules');
+  assert.equal((await service.start()).mode, 'SIMULATED');
+  const run = await service.startInvestigation('CASE-001'); await service.waitForRun(run.id);
+  assert.equal((await service.getInvestigation('CASE-001', run.id)).status, 'completed');
+  assert.equal(groqCalls, 0);
+  assert.ok(Object.values(service.switchCollaboration.sessions).every(session => session.state === 'disconnected'));
+  await service.shutdown();
+});
+
+test('live switch collaboration service startup and cleanup reflect actual role readiness', async () => {
+  const service = new InvestigationService(new MemoryRepository(), { env: { SWITCH_MODE: 'live', INVESTIGATION_ENGINE: 'switch', SWITCH_API_URL: 'https://switch.example', SWITCH_ROOM_ID: 'room', SWITCH_RECON_ID: 'r', SWITCH_RECON_API_KEY: 'x', SWITCH_AUDITOR_ID: 'a', SWITCH_AUDITOR_API_KEY: 'x', SWITCH_RESOLVER_ID: 'z', SWITCH_RESOLVER_API_KEY: 'x' } });
+  assert.equal((await service.integrationStatus()).connected, false);
+  for (const session of Object.values(service.switchCollaboration.sessions)) {
+    session.start = async function () { this.state = 'connected'; };
+    session.stop = async function () { this.state = 'stopped'; };
+  }
+  assert.equal((await service.start()).connected, true);
+  await service.shutdown();
+  assert.equal((await service.integrationStatus()).connected, false);
 });
 
 test('live mode fails honestly and never substitutes simulated work when Switch is unavailable', async () => {

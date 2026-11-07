@@ -8,6 +8,7 @@ async function request(path, options) {
 export const api = {
   health: () => request('/health'),
   cases: () => request('/cases'), case: id => request(`/cases/${id}`), evidence: id => request(`/cases/${id}/evidence`),
+  createCase: body => request('/cases', { method: 'POST', body: JSON.stringify(body) }),
   activity: id => request(`/cases/${id}/activity`), timeline: id => request(`/cases/${id}/timeline`), report: id => request(`/reports/${id}`),
   reconcile: id => request(`/cases/${id}/reconcile`, { method: 'POST' }),
   startInvestigation: id => request(`/cases/${id}/investigations`, { method: 'POST' }),
