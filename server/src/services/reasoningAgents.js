@@ -11,7 +11,7 @@ const commonKeys = ['agent', 'task_id', 'case_id', 'status', 'findings', 'eviden
 export function validateReasoningOutput(role, raw, { taskId, caseId } = {}) {
   const value = parseAgentJson(raw, role);
   for (const key of commonKeys) if (!(key in value)) throw new Error(`${role} response is missing ${key}.`);
-  if (value.agent !== role || value.task_id !== taskId || value.case_id !== caseId) throw new Error(`${role} response correlation fields do not match the requested task.`);
+  if (value.agent !== role || value.task_id !== taskId || value.case_id !== caseId) throw new Error(`${role} response correlation fields do not match the requested task (agent=${String(value.agent)}, task_id=${String(value.task_id)}, case_id=${String(value.case_id)}).`);
   if (!['complete', 'needs_review'].includes(value.status)) throw new Error(`${role} response status must be "complete" or "needs_review".`);
   for (const key of ['findings', 'evidence', 'calculations', 'unresolved_questions']) if (!Array.isArray(value[key])) throw new Error(`${role} response field ${key} must be an array.`);
   for (const key of ['recommendation', 'reasoning_summary']) if (typeof value[key] !== 'string') throw new Error(`${role} response field ${key} must be a string.`);
@@ -27,8 +27,21 @@ export class ReasoningAgents {
     if (!instructions[role]) throw new Error(`Unknown reasoning agent: ${role}`);
     const source = { task_id: taskId, case_id: caseRecord.id, case: caseRecord, ...(recon ? { recon } : {}), ...(auditor ? { auditor } : {}) };
     const system = `${instructions[role]} Return exactly one JSON object. Required top-level keys: agent, task_id, case_id, status, findings, evidence, calculations, unresolved_questions, recommendation, reasoning_summary. Copy agent, task_id, and case_id exactly from the input. status must be exactly complete or needs_review. findings/evidence/calculations/unresolved_questions must be arrays; recommendation and reasoning_summary must be strings. Do not omit fields or use alternate status words. Keep reasoning_summary concise and do not provide hidden chain-of-thought. For RESOLVER also include human_approval_required:true and payment_authorized:false.`;
-    const raw = await this.provider.complete({ system, user: JSON.stringify(source) });
-    return validateReasoningOutput(role, raw, { taskId, caseId: caseRecord.id });
+    const user = JSON.stringify(source);
+    const raw = await this.provider.complete({ system, user });
+    try {
+      return validateReasoningOutput(role, raw, { taskId, caseId: caseRecord.id });
+    } catch (error) {
+      // A reasoning response with sound content but incorrect correlation
+      // metadata can be recovered with one explicit correction request.
+      // All other validation failures still fail closed.
+      if (!/correlation fields do not match/.test(error.message)) throw error;
+      const corrected = await this.provider.complete({
+        system: `${system}\nThe required correlation values are exact: agent=${role}; task_id=${taskId}; case_id=${caseRecord.id}. Copy each value exactly.`,
+        user
+      });
+      return validateReasoningOutput(role, corrected, { taskId, caseId: caseRecord.id });
+    }
   }
 }
 

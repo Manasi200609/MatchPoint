@@ -61,8 +61,13 @@ Copy `.env.example` to `.env` in the project root. Mock mode works with the defa
 | `SWITCH_RESOLVER_ID`, `SWITCH_RESOLVER_API_KEY`, `SWITCH_RESOLVER_CONNECTION_ID` | RESOLVER identity, credential and unique persistent connection |
 | `SWITCH_REQUEST_TIMEOUT_MS` | Timeout for a Switch operation request |
 | `SWITCH_AGENT_TIMEOUT_MS` | Maximum wait for an agent reply |
+| `DISCORD_BOT_TOKEN` | Server-only Discord bot token |
+| `DISCORD_CHANNEL_ID` | The one guild text channel where the bot accepts commands and posts reports |
 
 Never put Switch credentials in `client/.env`, Vite variables, or browser code.
+Keep `DISCORD_BOT_TOKEN` server-side as well. The `!` prefix commands require the Message Content privileged intent to be enabled for the MatchPoint Agent application in Discord Developer Portal. A Gateway close code `4014` means Discord rejected that intent.
+
+The Discord bot starts with the backend using `npm run dev` or `npm run start -w server`. In the configured channel it supports `!help`, `!investigate CASE-001`, `!status CASE-001`, and `!ask CASE-001 <message>`. Agent reports are forwarded from persisted Switch workflow events with their case, investigation, task, and role identifiers. The current workflow does not accept mid-run human instructions, so `!ask` reports that the message was not forwarded.
 
 ## Run on Windows (PowerShell)
 

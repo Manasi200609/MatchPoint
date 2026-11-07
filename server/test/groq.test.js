@@ -53,6 +53,15 @@ test('AUDITOR prompt requires independent arithmetic and exact output schema', a
   assert.match(request.system, /at least one finding/);
 });
 
+test('reasoning agent retries once when Groq returns mismatched correlation metadata', async () => {
+  const requests = [];
+  const agents = new ReasoningAgents({ provider: { complete: async input => { requests.push(input); return requests.length === 1 ? valid('RECON', 'wrong-task', 'CASE-001') : valid('RECON', 'run-1:RECON', 'CASE-001'); } } });
+  const result = await agents.run('RECON', { taskId: 'run-1:RECON', caseRecord: { id: 'CASE-001', invoice: {}, purchaseOrder: {}, goodsReceived: {}, evidence: [] } });
+  assert.equal(result.task_id, 'run-1:RECON');
+  assert.equal(requests.length, 2);
+  assert.match(requests[1].system, /task_id=run-1:RECON/);
+});
+
 test('AUDITOR still rejects absent required findings', () => {
   const missingFindings = JSON.stringify({ agent: 'AUDITOR', task_id: 'task-1', case_id: 'CASE-001', status: 'complete', findings: [], evidence: [], calculations: [], unresolved_questions: [], recommendation: 'Hold', reasoning_summary: 'Checked source data.' });
   assert.throws(() => validateReasoningOutput('AUDITOR', missingFindings, { taskId: 'task-1', caseId: 'CASE-001' }), /at least one finding/);

@@ -36,7 +36,11 @@ function parseMessage(body) {
   if (typeof body !== 'string') return null;
 
   try {
-    const parsed = JSON.parse(body);
+    // Switch prefixes targeted messages with the addressed participant
+    // mention (for example "@recon {\"type\":...}"). Keep parsing strict
+    // after removing that transport-level prefix.
+    const content = body.replace(/^@[^\s]+\s+/, '');
+    const parsed = JSON.parse(content);
 
     return parsed &&
       typeof parsed === 'object' &&
@@ -59,6 +63,20 @@ function isValidRole(role) {
   return roles.includes(role);
 }
 
+function agentCasePayload(caseRecord) {
+  return {
+    id: caseRecord.id,
+    synthetic: Boolean(caseRecord.synthetic),
+    testCaseKey: caseRecord.testCaseKey || null,
+    scenarioContext: caseRecord.investigationContext || null,
+    vendor: caseRecord.vendor,
+    invoice: caseRecord.invoice,
+    purchaseOrder: caseRecord.purchaseOrder,
+    goodsReceived: caseRecord.goodsReceived,
+    evidence: caseRecord.evidence
+  };
+}
+
 /**
  * The incoming case must be identical to the original case.
  * Matching only the case ID is insufficient because an agent
@@ -69,7 +87,7 @@ function isValidCasePayload(caseData, originalCase) {
     Boolean(caseData) &&
     typeof caseData === 'object' &&
     !Array.isArray(caseData) &&
-    isDeepStrictEqual(caseData, originalCase)
+    isDeepStrictEqual(caseData, agentCasePayload(originalCase))
   );
 }
 
@@ -134,21 +152,20 @@ function hasValidReports(role, incomingReports, state) {
 }
 
 /**
- * Authenticate a sender using the participant ID registered
- * in the expected sender's Switch room membership.
- *
- * Display-name fallback is deliberately prohibited.
+ * Match a Switch message to the expected registered room participant.
+ * Agent Bridge exposes a Matrix-style sender ID on messages but UUIDs in
+ * room membership, so use Switch's canonical sender_name only after confirming
+ * that exact name belongs to a registered agent participant.
  */
 function isRegisteredSender(
   session,
   expectedAgentName,
-  senderId
+  senderId,
+  senderName
 ) {
   if (
     !session ||
-    !Array.isArray(session.participants) ||
-    typeof senderId !== 'string' ||
-    !senderId
+    !Array.isArray(session.participants)
   ) {
     return false;
   }
@@ -158,10 +175,20 @@ function isRegisteredSender(
     String(expectedAgentName || '').toLowerCase()
   );
 
-  return Boolean(
-    participant?.id &&
-    String(participant.id) === senderId
-  );
+  if (!participant?.id) return false;
+
+  // Switch's read_context sender is its Matrix-style actor ID, while
+  // connect_to_room exposes the registered agent UUID. The canonical
+  // sender_name is the bridge field that links a room message to that
+  // registered participant; compare it exactly and case-insensitively.
+  if (
+    typeof senderName === 'string' &&
+    senderName.toLowerCase() === String(participant.name).toLowerCase()
+  ) {
+    return true;
+  }
+
+  return typeof senderId === 'string' && String(participant.id) === senderId;
 }
 
 export class SwitchCollaboration {
@@ -190,6 +217,8 @@ export class SwitchCollaboration {
 
     this.timeoutMs =
       Number(env.SWITCH_REQUEST_TIMEOUT_MS) || 12000;
+    this.agentTimeoutMs =
+      Number(env.SWITCH_AGENT_TIMEOUT_MS) || 120000;
 
     this.agentNames = {
       RECON: env.SWITCH_RECON_NAME || 'RECON',
@@ -247,7 +276,19 @@ export class SwitchCollaboration {
           timeoutMs: this.timeoutMs,
           fetchImpl,
 
-          onEvent: frame => this.receive(role, frame),
+          // Agent work can take longer than Switch's WebSocket heartbeat
+          // window. Dispatch it in the background so the role session keeps
+          // consuming ping and control frames while Groq is running.
+          onEvent: frame => {
+            void this.receive(role, frame).catch(error => {
+              console.error('MATCHPOINT Switch event handler failed.', {
+                role,
+                event: frame?.event || null,
+                messageId: frame?.data?.payload?.message_id || null,
+                code: error?.code || 'unknown'
+              });
+            });
+          },
 
           onStatus: status => this.onStatus(status)
         });
@@ -463,7 +504,8 @@ export class SwitchCollaboration {
     targetRole,
     taskId: body.task_id,
     threadId: threadId || result.event_id,
-    failures: 0
+      failures: 0,
+      deadlineAt: Date.now() + this.agentTimeoutMs
   });
 
   this.startQueuedPolling();
@@ -499,6 +541,15 @@ async pollQueuedDeliveries() {
 
       if (!state) {
         this.pendingDeliveries.delete(pending.eventId);
+        continue;
+      }
+
+      if (Date.now() >= pending.deadlineAt) {
+        this.pendingDeliveries.delete(pending.eventId);
+        state.rejectCompletion(new SwitchSessionError(
+          'agent_timeout',
+          `Switch did not deliver the task to ${this.agentNames[pending.targetRole]} before the configured timeout.`
+        ));
         continue;
       }
 
@@ -571,6 +622,13 @@ async pollQueuedDeliveries() {
             }
           }
         });
+
+        if (state.expectedRole === pending.targetRole) {
+          state.rejectCompletion(new SwitchSessionError(
+            'invalid_task_message',
+            `Switch returned a message that did not match the pending ${pending.targetRole} task.`
+          ));
+        }
       } catch (error) {
         pending.failures += 1;
 
@@ -665,7 +723,7 @@ async pollQueuedDeliveries() {
           stage_task_id: `${runId}:RECON`,
           case_id: caseRecord.id,
           role: 'RECON',
-          case: caseRecord,
+          case: agentCasePayload(caseRecord),
           reports: {}
         }
       );
@@ -773,7 +831,8 @@ async pollQueuedDeliveries() {
       const resolverSenderMatches = isRegisteredSender(
         this.sessions.RESOLVER,
         this.agentNames.RESOLVER,
-        payload.sender
+        payload.sender,
+        payload.sender_name
       );
 
       if (!resolverSenderMatches) {
@@ -793,6 +852,7 @@ async pollQueuedDeliveries() {
       }
 
       this.remember(messageId);
+      state.finalResultReceived = true;
 
       state.resolveCompletion({
         recon: state.stageOutputs.RECON,
@@ -859,8 +919,13 @@ async pollQueuedDeliveries() {
     const senderMatches = isRegisteredSender(
       expectedSender,
       this.agentNames[expectedSenderRole],
-      payload.sender
-);
+      payload.sender,
+      payload.sender_name
+    );
+
+    if (!senderMatches) {
+      return;
+    }
 
     if (
       role !== 'RECON' &&
@@ -905,7 +970,7 @@ async pollQueuedDeliveries() {
       // the incoming message, not the incoming object itself.
       const model = await this.reasoningAgents.run(role, {
         taskId: body.stage_task_id,
-        caseRecord: state.caseRecord,
+        caseRecord: agentCasePayload(state.caseRecord),
         recon: state.reports.recon,
         auditor: state.reports.auditor
       });
@@ -998,7 +1063,7 @@ async pollQueuedDeliveries() {
             stage_task_id: `${state.runId}:${following}`,
             case_id: state.caseRecord.id,
             role: following,
-            case: state.caseRecord,
+            case: agentCasePayload(state.caseRecord),
             reports
           },
           state.threadId
@@ -1061,6 +1126,8 @@ async pollQueuedDeliveries() {
           threadId: state.threadId,
           source: 'switch'
         });
+
+        await this.waitForFinalResult(state, result.event_id);
       }
 
       this.remember(messageId);
@@ -1087,6 +1154,62 @@ async pollQueuedDeliveries() {
         this.processedMessageIds.values().next().value;
 
       this.processedMessageIds.delete(oldest);
+    }
+  }
+
+  async waitForFinalResult(state, eventId) {
+    const deadline = Date.now() + this.agentTimeoutMs;
+    while (!state.finalResultReceived && !this.stopping && Date.now() < deadline) {
+      const context = await this.sessions.RESOLVER.operation('read_context', {
+        room_id: this.roomId,
+        limit: 100
+      });
+      if (!context || !Array.isArray(context.threads)) {
+        throw new SwitchSessionError(
+          'invalid_response',
+          'Switch read_context returned an unexpected response while awaiting the final report.'
+        );
+      }
+
+      let found = null;
+      for (const thread of context.threads) {
+        if (!thread?.root || !Array.isArray(thread.replies)) continue;
+        for (const message of [thread.root, ...thread.replies]) {
+          if (message?.id === eventId) {
+            found = { ...message, threadId: thread.root.id };
+            break;
+          }
+        }
+        if (found) break;
+      }
+
+      if (found) {
+        await this.receive('RESOLVER', {
+          event: 'message',
+          data: {
+            room_id: this.roomId,
+            payload: {
+              message_id: found.id,
+              sender: found.sender,
+              sender_name: found.sender_name,
+              body: found.body,
+              thread_id: found.threadId,
+              addressed: false
+            }
+          }
+        });
+        if (state.finalResultReceived) return;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+
+    if (this.stopping) throw createStoppingError();
+    if (!state.finalResultReceived) {
+      throw new SwitchSessionError(
+        'agent_timeout',
+        'Switch did not return a correlated final RESOLVER result before the configured timeout.'
+      );
     }
   }
 }

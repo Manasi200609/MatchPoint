@@ -8,9 +8,11 @@ const projectRoot = resolve(
 );
 
 dotenv.config({ path: resolve(projectRoot, '.env') });
+dotenv.config({ path: resolve(projectRoot, 'server/.env') });
 
 import { JsonCaseRepository } from './repository/JsonCaseRepository.js';
 import { InvestigationService } from './services/InvestigationService.js';
+import { DiscordIntegration } from './discord/DiscordIntegration.js';
 import {
   createApp,
   shutdownHttpServer,
@@ -19,6 +21,7 @@ import {
 
 const repo = new JsonCaseRepository();
 const service = new InvestigationService(repo);
+const discord = new DiscordIntegration(service);
 const app = createApp(service, repo);
 
 const port = Number(process.env.PORT) || 4000;
@@ -33,7 +36,12 @@ async function shutdown(signal) {
   console.log(`MATCHPOINT shutting down (${signal}).`);
 
   try {
-    await shutdownHttpServer(service, server);
+    const results = await Promise.allSettled([
+      discord.stop(),
+      shutdownHttpServer(service, server)
+    ]);
+    const failure = results.find(result => result.status === 'rejected');
+    if (failure) throw failure.reason;
   } catch (error) {
     console.error(
       'MATCHPOINT shutdown cleanup failed.',
@@ -55,6 +63,7 @@ try {
   await repo.init();
 
   if (!stopping) {
+    void discord.start().catch(() => {});
     ({ server } = startHttpServer(app, service, port));
   }
 } catch (error) {

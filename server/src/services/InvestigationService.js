@@ -44,6 +44,12 @@ export class InvestigationService {
     this.starting = new Map();
     this.statusCache = null;
     this.statusPending = null;
+    this.investigationEventListeners = new Set();
+  }
+
+  addInvestigationEventListener(listener) {
+    this.investigationEventListeners.add(listener);
+    return () => this.investigationEventListeners.delete(listener);
   }
 
   get switch() { return this.mode === 'LIVE' ? this.liveSwitch : this.mode === 'SWITCH' ? this.switchCollaboration : this.mockSwitch; }
@@ -135,6 +141,25 @@ export class InvestigationService {
     const isSwitch = this.mode === 'LIVE' || this.mode === 'SWITCH';
     await this.repository.addTimeline({ title: item.title || `${item.actor} update`, detail: item.summary || item.body || '', actor: item.actor || 'System', timestamp: event.timestamp, type: item.kind || (isSwitch ? 'switch' : 'simulated'), simulated: !isSwitch, caseId });
     await this.repository.addActivity({ actor: item.actor || 'System', summary: item.summary || item.body || '', timestamp: event.timestamp, simulated: !isSwitch, source: isSwitch ? 'switch' : 'simulated', caseId });
+    for (const listener of this.investigationEventListeners) {
+      try {
+        Promise.resolve(listener({ caseId, investigationId, event })).catch(error => {
+          console.error('MATCHPOINT investigation event listener failed.', {
+            caseId,
+            investigationId,
+            eventId: event.id,
+            code: error?.code || 'unknown'
+          });
+        });
+      } catch (error) {
+        console.error('MATCHPOINT investigation event listener failed.', {
+          caseId,
+          investigationId,
+          eventId: event.id,
+          code: error?.code || 'unknown'
+        });
+      }
+    }
     return event;
   }
 

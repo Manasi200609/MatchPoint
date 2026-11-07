@@ -44,18 +44,31 @@ test('startup failure records disconnected status and cleans every role session'
   assert.match(collab.getStatus().error, /disconnected.*reconnect/i);
 });
 
+test('Switch WebSocket event dispatch does not wait for slow agent processing', async () => {
+  const collab = new SwitchCollaboration({ env: configuredEnv(), sessionFactory: options => ({ ...options, state: 'connected' }) });
+  let entered = false;
+  let release;
+  collab.receive = () => new Promise(resolve => { entered = true; release = resolve; });
+  const callbackResult = collab.sessions.RECON.onEvent({ event: 'message', data: { payload: { message_id: 'slow-task' } } });
+  assert.equal(callbackResult, undefined);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(entered, true);
+  release();
+});
+
 test('Switch task handler correlates an addressed task, processes it once, and hands original case plus report to the next agent', async () => {
   const caseRecord = seed().cases[0];
   const calculations = reconcileCase(caseRecord);
+  const taskCase = { id: caseRecord.id, synthetic: Boolean(caseRecord.synthetic), testCaseKey: caseRecord.testCaseKey || null, scenarioContext: caseRecord.investigationContext || null, vendor: caseRecord.vendor, invoice: caseRecord.invoice, purchaseOrder: caseRecord.purchaseOrder, goodsReceived: caseRecord.goodsReceived, evidence: caseRecord.evidence };
   const calls = [], stages = [], events = [], rolesRun = [];
   const collab = new SwitchCollaboration({
     env: { SWITCH_API_URL: 'https://switch.example/api', SWITCH_ROOM_ID: 'room', SWITCH_RECON_ID: 'recon', SWITCH_RECON_API_KEY: 'fixture', SWITCH_AUDITOR_ID: 'auditor', SWITCH_AUDITOR_API_KEY: 'fixture', SWITCH_RESOLVER_ID: 'resolver', SWITCH_RESOLVER_API_KEY: 'fixture' },
     reasoningAgents: { run: async (role, input) => { rolesRun.push({ role, input }); return modelOutput(role, input.taskId, input.caseRecord.id); } }
   });
   collab.sessions = {
-    RECON: { agentId: 'recon', state: 'connected', participants: [{ id: 'resolver', name: 'RESOLVER' }], operation: async (name, args) => { calls.push({ from: 'RECON', name, args }); return { event_id: 'audit-task-event', target_statuses: { AUDITOR: 'live' } }; } },
+    RECON: { agentId: 'recon', state: 'connected', participants: [], operation: async (name, args) => { calls.push({ from: 'RECON', name, args }); return { event_id: 'audit-task-event', target_statuses: { AUDITOR: 'live' } }; } },
     AUDITOR: { agentId: 'auditor', state: 'connected', participants: [], operation: async () => ({}) },
-    RESOLVER: { agentId: 'resolver', state: 'connected', participants: [], operation: async () => ({}) }
+    RESOLVER: { agentId: 'resolver', state: 'connected', participants: [{ id: 'resolver', name: 'RESOLVER' }], operation: async () => ({}) }
   };
   collab.runs.set('run-1', {
     runId: 'run-1', caseRecord, calculations, workflow: { recon: { existing: true }, auditor: { disputedFindings: [] } },
@@ -64,7 +77,7 @@ test('Switch task handler correlates an addressed task, processes it once, and h
     onStage: async (role, update) => stages.push({ role, update }),
     onEvent: async event => events.push(event)
   });
-  const frame = { event: 'message', data: { room_id: 'room', payload: { addressed: true, message_id: 'root-event', thread_id: null, sender: 'resolver', sender_name: 'RESOLVER', body: JSON.stringify({ type: 'matchpoint.investigation.task', version: 1, task_id: 'run-1', stage_task_id: 'run-1:RECON', case_id: caseRecord.id, role: 'RECON', case: caseRecord, reports: {} }) } } };
+  const frame = { event: 'message', data: { room_id: 'room', payload: { addressed: true, message_id: 'root-event', thread_id: null, sender: 'resolver', sender_name: 'RESOLVER', body: `@recon ${JSON.stringify({ type: 'matchpoint.investigation.task', version: 1, task_id: 'run-1', stage_task_id: 'run-1:RECON', case_id: caseRecord.id, role: 'RECON', case: taskCase, reports: {} })}` } } };
   await collab.receive('RECON', frame);
   await collab.receive('RECON', frame);
   assert.deepEqual(rolesRun.map(x => x.role), ['RECON']);
@@ -96,12 +109,24 @@ test('Switch task handler ignores unaddressed, wrong-sender, wrong-role, and mis
   assert.equal(reasoningCalls, 0);
 });
 
+test('queued Switch tasks reject the investigation when read_context never returns the task', async () => {
+  let rejected;
+  const collab = new SwitchCollaboration({ env: configuredEnv() });
+  collab.sessions.RECON = { state: 'connected', operation: async () => ({ threads: [] }) };
+  collab.runs.set('run-timeout', { rejectCompletion: error => { rejected = error; } });
+  collab.pendingDeliveries.set('missing-event', { eventId: 'missing-event', targetRole: 'RECON', taskId: 'run-timeout', threadId: 'missing-event', failures: 0, deadlineAt: Date.now() - 1 });
+  await collab.pollQueuedDeliveries();
+  assert.equal(rejected?.code, 'agent_timeout');
+  assert.equal(collab.pendingDeliveries.size, 0);
+});
+
 test('Switch collaboration routes all three role payloads and returns the final thread report (unit transport fixture)', async () => {
   const caseRecord = seed().cases[0];
   const roleNames = { RECON: 'RECON', AUDITOR: 'AUDITOR', RESOLVER: 'RESOLVER' };
   const participants = Object.entries(roleNames).map(([role, name]) => ({ id: `id-${role}`, name }));
   const sessions = {};
   const agentInputs = [];
+  const deliveredTasks = [];
   let eventNumber = 0;
   const collab = new SwitchCollaboration({
     env: { SWITCH_API_URL: 'https://switch.example/api', SWITCH_ROOM_ID: 'room', SWITCH_RECON_ID: 'id-RECON', SWITCH_RECON_API_KEY: 'fixture', SWITCH_AUDITOR_ID: 'id-AUDITOR', SWITCH_AUDITOR_API_KEY: 'fixture', SWITCH_RESOLVER_ID: 'id-RESOLVER', SWITCH_RESOLVER_API_KEY: 'fixture' },
@@ -112,12 +137,15 @@ test('Switch collaboration routes all three role payloads and returns the final 
         if (name === 'connect_to_room') return { room_id: 'room', participants };
         const eventId = `switch-event-${++eventNumber}`;
         if (name === 'send_targeted_message') {
+          deliveredTasks.push(JSON.parse(args.body));
           const targetRole = Object.keys(roleNames).find(key => roleNames[key] === args.target_names[0]);
-          await sessions[targetRole].onEvent({ event: 'message', id: String(eventNumber), data: { room_id: 'room', payload: { addressed: true, message_id: eventId, thread_id: args.thread_id || null, sender: `id-${role}`, sender_name: roleNames[role], body: args.body } } });
+          // Switch's targeted-message representation includes the target
+          // mention before the caller's body.
+          await collab.receive(targetRole, { event: 'message', id: String(eventNumber), data: { room_id: 'room', payload: { addressed: true, message_id: eventId, thread_id: args.thread_id || null, sender: `@switch-agent-${role.toLowerCase()}:localhost`, sender_name: roleNames[role], body: `@${args.target_names[0]} ${args.body}` } } });
           return { event_id: eventId, target_statuses: { [args.target_names[0]]: 'live' } };
         }
         if (name === 'post_message') {
-          await sessions.RESOLVER.onEvent({ event: 'message', id: String(eventNumber), data: { room_id: 'room', payload: { addressed: false, message_id: eventId, thread_id: args.thread_id, sender: 'id-RESOLVER', sender_name: 'RESOLVER', body: args.body } } });
+          await collab.receive('RESOLVER', { event: 'message', id: String(eventNumber), data: { room_id: 'room', payload: { addressed: false, message_id: eventId, thread_id: args.thread_id, sender: '@switch-agent-resolver:localhost', sender_name: 'RESOLVER', body: args.body } } });
           return { event_id: eventId };
         }
         throw new Error(`unexpected operation ${name}`);
@@ -130,6 +158,8 @@ test('Switch collaboration routes all three role payloads and returns the final 
   const stages = [];
   const result = await collab.execute({ runId: 'run-e2e', caseRecord, calculations: reconcileCase(caseRecord), onStage: async (role, update) => stages.push({ role, update }), onEvent: async () => {} });
   assert.deepEqual(agentInputs.map(x => x.role), ['RECON', 'AUDITOR', 'RESOLVER']);
+  assert.deepEqual(Object.keys(deliveredTasks[0].case).sort(), ['evidence', 'goodsReceived', 'id', 'invoice', 'purchaseOrder', 'scenarioContext', 'synthetic', 'testCaseKey', 'vendor'].sort());
+  assert.equal('investigations' in deliveredTasks[0].case, false);
   assert.equal(agentInputs[0].input.caseRecord.invoice.total, caseRecord.invoice.total);
   assert.equal(agentInputs[1].input.caseRecord.invoice.total, caseRecord.invoice.total);
   assert.equal(agentInputs[1].input.recon.agent, 'RECON');
@@ -138,4 +168,30 @@ test('Switch collaboration routes all three role payloads and returns the final 
   assert.equal(result.threadId, 'switch-event-1');
   assert.equal(result.resolver.modelOutput.agent, 'RESOLVER');
   assert.deepEqual(stages.filter(x => x.update.status === 'complete').map(x => x.role), ['RECON', 'AUDITOR', 'RESOLVER']);
+});
+
+test('Switch final result is correlated from read_context when no WebSocket event is delivered', async () => {
+  const report = modelOutput('RESOLVER', 'run-final:RESOLVER', 'CASE-001');
+  const body = { type: 'matchpoint.investigation.result', version: 1, task_id: 'run-final', stage_task_id: 'run-final:RESOLVER', case_id: 'CASE-001', thread_id: 'thread-final', role: 'RESOLVER', report };
+  const collab = new SwitchCollaboration();
+  let completed;
+  collab.sessions = {
+    RESOLVER: {
+      participants: [{ id: 'resolver-uuid', name: 'RESOLVER' }],
+      operation: async name => {
+        assert.equal(name, 'read_context');
+        return { threads: [{ root: { id: 'thread-final', kind: 'message', sender: 'sender', sender_name: 'RECON', body: '{}' }, replies: [{ id: 'result-event', sender: '@switch-agent-resolver:localhost', sender_name: 'RESOLVER', body: JSON.stringify(body) }] }] };
+      }
+    }
+  };
+  const state = {
+    runId: 'run-final', caseRecord: { id: 'CASE-001' }, calculations: {}, threadId: 'thread-final',
+    stageOutputs: { RECON: {}, AUDITOR: {}, RESOLVER: {} }, reports: { resolver: report }, finalResultReceived: false,
+    resolveCompletion: result => { completed = result; }
+  };
+  collab.runs.set(state.runId, state);
+  await collab.waitForFinalResult(state, 'result-event');
+  assert.equal(state.finalResultReceived, true);
+  assert.equal(completed.threadId, 'thread-final');
+  assert.deepEqual(completed.resolver, state.stageOutputs.RESOLVER);
 });
